@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spartan-planner",
+      "runtimeExecutable": "C:\\Projects\\spartan-planner\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "backend.main:app", "--app-dir", "C:\\Projects\\spartan-planner", "--port", "8000", "--no-access-log"],
+      "port": 8000
+    }
+  ]
+}

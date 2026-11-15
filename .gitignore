@@ -1,0 +1,24 @@
+# Secrets: never commit
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local data (the development SQLite database lives in data/)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local tool settings
+.claude/settings.local.json
+
+# OS and editor files
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/

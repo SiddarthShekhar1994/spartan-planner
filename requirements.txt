@@ -1,0 +1,14 @@
+# Runtime dependencies, pinned. Install with:  py -m pip install -r requirements-dev.txt
+fastapi==0.163.0
+# FastAPI does not pin Starlette, so we do.
+starlette==1.10.0
+uvicorn==0.54.0
+# Needed by FastAPI to read uploaded files and form fields.
+python-multipart==0.0.33
+anthropic==2.8.0
+pydantic==2.14.3
+# The [crypto] extra lets pypdf open permission-locked PDFs.
+pypdf[crypto]==7.1.0
+cryptography==50.0.2
+python-docx==1.2.0
+python-dotenv==1.2.4

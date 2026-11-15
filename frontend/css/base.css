@@ -1,0 +1,432 @@
+/*
+ * Base: reset, page frame, type, buttons, fields, and pieces both screens share.
+ * All motion lives in the prefers-reduced-motion: no-preference block at the end.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  font-size: 100%;
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+::selection {
+  background: var(--cheer);
+  color: var(--bg);
+}
+
+/* ---------- Type ---------- */
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-h1);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: var(--text-h2);
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: var(--text-h3);
+  line-height: 1.2;
+}
+
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--text);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+/* ---------- Focus: a lime ring for keyboard users, never removed without this ---------- */
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+main:focus-visible {
+  outline-offset: -3px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--gutter);
+  z-index: 10;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* ---------- Page frame ---------- */
+
+.site-header {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--space-4) var(--gutter) 0;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.wordmark:hover {
+  text-decoration: underline;
+}
+
+main {
+  display: block;
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: 0 var(--gutter) var(--space-8);
+}
+
+.screen-header {
+  max-width: 46rem;
+  padding-top: clamp(2rem, 7vw, 5rem);
+}
+
+.lead {
+  max-width: 40rem;
+  margin-top: var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-lg);
+}
+
+.noscript {
+  padding-top: var(--space-7);
+  font-size: var(--text-lg);
+}
+
+.crash-action {
+  margin-top: var(--space-6);
+}
+
+/* ---------- Buttons ---------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--hit);
+  padding: 0.625rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button .icon {
+  width: 1.125em;
+  height: 1.125em;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.button-primary:hover {
+  background: var(--accent-hover);
+}
+
+.button-secondary {
+  background: var(--raised);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.button-secondary:hover {
+  background: var(--raised-hover);
+  border-color: var(--muted);
+}
+
+.button-quiet {
+  padding-inline: 0.875rem;
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.button-quiet:hover {
+  background: var(--raised);
+}
+
+/* ---------- Fields ---------- */
+
+.field-label {
+  display: block;
+  font-weight: 700;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.text-input,
+textarea {
+  display: block;
+  width: 100%;
+  min-height: var(--hit);
+  padding: 0.6875rem 0.875rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: max(1rem, var(--text-md));
+  line-height: 1.4;
+}
+
+textarea {
+  min-height: 11rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.text-input:hover,
+textarea:hover {
+  border-color: var(--muted);
+}
+
+[aria-invalid="true"],
+[aria-invalid="true"]:hover {
+  border-color: var(--warning);
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--warning);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.field-error .icon {
+  margin-top: 0.1em;
+}
+
+/* ---------- Shared pieces ---------- */
+
+.icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.2em;
+}
+
+.class-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--class-color, var(--muted));
+}
+
+.class-dot.is-pending {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--border-strong);
+}
+
+.dot-sep {
+  color: var(--muted);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) 1.125rem;
+  border: 1px solid var(--warning-line);
+  border-radius: var(--radius);
+  background: var(--warning-surface);
+}
+
+.notice > .icon {
+  margin-top: 0.15em;
+  color: var(--warning);
+}
+
+.notice-body {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* A heading title (the dates screen's h2) keeps Bricolage 800; a <p> title uses the body font. */
+.notice-title {
+  font-size: var(--text-md);
+  letter-spacing: 0;
+}
+
+p.notice-title {
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+.notice .button {
+  margin-top: var(--space-2);
+}
+
+.loading-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+}
+
+/* ---------- Motion: only for people who haven't asked for less ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  .icon-spin {
+    transform-origin: 50% 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .is-popping {
+    transform-origin: 50% 50%;
+    animation: pop 340ms var(--ease-out) both;
+  }
+
+  .button {
+    transition: transform 120ms var(--ease-out);
+  }
+
+  .button:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .button .icon-arrow-right {
+    transition: transform 160ms var(--ease-out);
+  }
+
+  .button:hover .icon-arrow-right {
+    transform: translateX(3px);
+  }
+}
