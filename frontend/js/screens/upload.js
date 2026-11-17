@@ -433,7 +433,7 @@ function syncChrome() {
   const busy = rows.some((row) => row.status === 'queued' || row.status === 'reading');
   // Wait for the whole queue, so the dates screen never shows half of what's coming.
   const ready = done.length > 0 && !busy;
-  // One main action at a time: Choose files until every class is read, then See my dates.
+  // One main action at a time: Choose files until every class is read, then Next.
   view.chooseButton.classList.toggle('btn-primary', !ready);
   view.chooseButton.classList.toggle('btn-secondary', ready);
   view.list.hidden = !hasRows;
@@ -471,7 +471,7 @@ function syncReady(ready, done) {
   view.ready.replaceChildren(
     el('p', { class: 'big-count' }, `Found ${dates} in ${classes}.`),
     el('p', { class: 'muted' }, detail),
-    el('div', { class: 'actions' }, el('a', { class: 'btn btn-primary', href: '#/dates' }, 'See my dates')));
+    el('div', { class: 'actions' }, el('a', { class: 'btn btn-primary', href: '#/hours' }, 'Next')));
 }
 
 function noteContent() {

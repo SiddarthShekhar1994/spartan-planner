@@ -1,0 +1,191 @@
+/*
+ * Setup: the progress dots in the header, and one question per screen.
+ * Hours is one big number with a slider. Extended time is four big choices;
+ * the picked one is marked with the highlighter.
+ */
+
+/* ---------- Progress through setup: text for screen readers, dots for the eye ---------- */
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--line-strong);
+}
+
+.dots span.is-done {
+  background: var(--ink);
+}
+
+.dots span.is-now {
+  width: 32px;
+  background: var(--ink);
+}
+
+/* ---------- Hours ---------- */
+
+.setup-card {
+  margin-top: var(--s6);
+  padding: clamp(24px, 3vw, 32px);
+  text-align: center;
+}
+
+.bignum {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: clamp(5rem, 6vw + 2.75rem, 7.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-unit {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.slider {
+  width: 100%;
+  height: var(--hit);
+  margin-top: var(--s5);
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-help {
+  margin-top: var(--s3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Extended time ---------- */
+
+.opts-set {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+  margin-top: var(--s6);
+}
+
+@media (min-width: 640px) {
+  .opts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.opt {
+  position: relative;
+}
+
+.opt input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.opt label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s1);
+  min-height: 112px;
+  padding: var(--s3);
+  border: 2px solid var(--line-strong);
+  border-radius: 18px;
+  background: var(--card);
+  text-align: center;
+  cursor: pointer;
+}
+
+.opt-n {
+  font-family: var(--display);
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.opt-w {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+
+/* The picked choice: the highlighter, a heavier border, and the native radio state for screen readers. */
+.opt input:checked + label {
+  border: 3px solid var(--ink);
+  background: var(--hl);
+  color: var(--hl-ink);
+}
+
+.opt input:checked + label .opt-w {
+  color: var(--hl-ink);
+}
+
+.opt input:focus-visible + label {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .opt input:not(:checked):hover + label {
+    border-color: var(--ink);
+    background: var(--panel);
+  }
+}
+
+.cust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+
+.cust-label {
+  font-weight: 700;
+}
+
+.cust input {
+  width: 120px;
+  min-height: 56px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+@supports (corner-shape: squircle) {
+  .opt label {
+    corner-shape: squircle;
+  }
+}

@@ -1,5 +1,18 @@
 # Changelog
 
+## Setup questions (2026-11-17)
+
+The two setup questions from the approved demo, one per screen, between upload and the dates.
+
+- "How many hours a week can you study?": one big number and a slider from 1 to 40, with "About 1 hr 45 min a day." under it. Starts at 12.
+- "Real talk: do you get extended time?": four big choices (No, 1.5x, 2x, Other). Other takes a number from 1 to 4. It says "You don't need to tell me why." and asks for nothing else.
+- Progress dots in the header through setup: upload, hours, extended time.
+- The upload panel's button is now "Next" and leads to the hours question. "See my dates" is on the extended-time screen.
+- Both answers are saved in the browser's localStorage only (`frontend/js/settings.js`). Nothing reads them yet: the plan screen that uses them is the next stage.
+- Tests: `tests/js/settings.test.mjs` checks the values, and checks that the module that talks to the server never touches these answers and that the server code has no word for them.
+
+Different from the old Build 2 prompt, following the demo: a slider instead of a number box with quick picks, no live example under the choices, and no Skip (regular time is already picked).
+
 ## Card-file look and automatic dates, stage one (2026-11-17)
 
 The upload screen and the dates screen now look and work like the demo Sid approved. Dates go in on their own. Nothing is confirmed one by one.
