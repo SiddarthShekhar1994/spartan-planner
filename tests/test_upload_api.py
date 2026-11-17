@@ -35,7 +35,7 @@ CLASS_NAME = "CS 101: Introduction to Programming"
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 SYLLABUS_KEYS = {"id", "class_name", "filename", "created_at", "item_count", "dated_count", "needs_date_count", "unverified_count"}
 ITEM_KEYS = {
-    "id", "syllabus_id", "title", "type", "due_date", "date_text", "weight", "source_text",
+    "id", "syllabus_id", "title", "type", "due_date", "extracted_due_date", "date_text", "weight", "source_text",
     "date_was_ambiguous", "source_verified", "status", "created_at",
 }
 ISO_UTC = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -51,7 +51,7 @@ EXPECTED_ORDER = [
     "Reading response", "Read Chapter 5 of Think Python", "Final exam",
 ]
 STATUS_TABLE = {
-    400: ["missing_client_id", "no_input", "two_inputs", "bad_request", "invalid_class_name"],
+    400: ["missing_client_id", "no_input", "two_inputs", "bad_request", "invalid_class_name", "invalid_date"],
     404: ["not_found"],
     405: ["method_not_allowed"],
     413: ["file_too_large", "text_too_long"],
@@ -939,7 +939,7 @@ def test_startup_creates_the_database_and_runs_migrations(make_client, tmp_path)
     db_path = tmp_path / "db" / "test.db"
     assert db_path.is_file()
     with contextlib.closing(sqlite3.connect(db_path)) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 2
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")}
         columns = {
             f"{table}.{row[1]}": row[1] for table in tables for row in conn.execute(f"PRAGMA table_info({table})")
@@ -976,18 +976,18 @@ def test_init_db_twice_is_harmless(db_connection, tmp_path):
     db_connection.init_db(path)
     db_connection.init_db(path)
     with contextlib.closing(sqlite3.connect(path)) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 2
 
 
 def test_init_db_only_applies_migrations_newer_than_user_version(db_connection, tmp_path):
-    path = tmp_path / "db" / "already-v1.db"
+    path = tmp_path / "db" / "already-current.db"
     path.parent.mkdir(parents=True)
     with contextlib.closing(sqlite3.connect(path)) as conn:
-        conn.execute("PRAGMA user_version = 1")
+        conn.execute("PRAGMA user_version = 2")
     db_connection.init_db(path)
     with contextlib.closing(sqlite3.connect(path)) as conn:
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert "syllabi" not in tables, "001 must be skipped when user_version is already 1"
+    assert "syllabi" not in tables, "every migration must be skipped when user_version is already the newest"
 
 
 def test_syllabus_row_records_the_model_and_prompt_version(client, tmp_path, client_id, sample_syllabus_text):

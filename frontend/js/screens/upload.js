@@ -1,5 +1,6 @@
 /**
- * Upload screen: a drop zone, a file picker, a paste box, and the "Your classes" list.
+ * Upload screen: the drop box under its "New class" tab, a paste box, one row per file,
+ * and the "Found N dates in N classes." panel once every file is read.
  * Uploads run one at a time. The queue lives in this module rather than in the DOM, so
  * it keeps going if the student opens their dates and then comes back here.
  */
@@ -7,28 +8,28 @@ import { ApiError, listSyllabi, messageFor, renameSyllabus, uploadSyllabusFile, 
 import { announce } from '../announce.js';
 import { classColorMap } from '../class-colors.js';
 import { formatCount, formatRetryAfter, plural } from '../format.js';
-import { dotted, el, icon } from '../icons.js';
+import { el, icon } from '../icons.js';
+import { toast } from '../toast.js';
+import { foundText, ROW_COPY, rowChildren, rowName } from './upload-rows.js';
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MIN_TEXT_CHARS = 50; // non-space characters, the same minimum the server uses
 const MAX_TEXT_CHARS = 150000;
-const MAX_CLASS_NAME_CHARS = 120;
 const ACCEPT = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const SLOW_AFTER_MS = 15000;
 const NO_RETRY_STATUSES = new Set([413, 415, 429]);
 // Sending the same file or text again can only get the same answer for these.
 const NO_RETRY_CODES = new Set(['text_too_short', 'no_text_found', 'unreadable_file']);
 // What a finished row shows from its syllabus. If none of these change, the row isn't redrawn.
-const ROW_FIELDS = ['class_name', 'item_count', 'needs_date_count', 'unverified_count'];
+const ROW_FIELDS = ['class_name', 'item_count', 'needs_date_count'];
 
 const COPY = {
-  lead: "Drop in a PDF or Word file, up to 10 MB each. I'll find every deadline and show you the exact sentence I found it in.",
-  dropIdle: 'Drag syllabus files here',
+  lead: "I'll pull out every deadline. You won't type a single date.",
+  dropIdle: 'Drop PDF or Word files here',
   dropActive: 'Let go to upload',
+  dropHint: 'Up to 10 MB each.',
+  deleteNote: "I delete each file once I've read it.",
   pasteHint: `Paste the whole thing, or just the schedule and grading parts. Up to ${formatCount(MAX_TEXT_CHARS)} characters.`,
-  queued: 'Waiting in line…',
-  reading: 'Reading it now…',
-  zeroItems: "No dates found in this one. If it's a scan, try pasting the text.",
-  empty: 'Nothing here yet. Your classes show up here as I read them.',
   wrongType: 'I can read PDF and Word (.docx) files.',
   tooBig: 'That file is over 10 MB.',
   noText: 'Paste some text first.',
@@ -38,7 +39,7 @@ const COPY = {
 
 // Rows in display order: {key, kind: "file"|"text"|"saved", label, file, text,
 // status: "queued"|"reading"|"done"|"error", syllabus, error: {status, code, message},
-// editing, draft, renameError, saving, justDone}.
+// editing, draft, renameError, saving, slow, slowTimer}.
 const rows = [];
 const classList = { status: 'idle', error: '' };
 let nextKey = 1;
@@ -49,10 +50,10 @@ let view = null; // DOM references, only while this screen is on the page
 export function render(container) {
   view = buildView();
   container.append(view.root);
-  for (const row of rows) Object.assign(row, { editing: false, draft: null, renameError: '', justDone: false });
+  for (const row of rows) Object.assign(row, { editing: false, draft: null, renameError: '' });
   sortRows();
   view.list.append(...rows.map(buildRow));
-  loadClasses(); // also draws the note, the list and the buttons
+  loadClasses(); // also draws the note, the list and the panel
   return () => {
     view = null;
   };
@@ -61,22 +62,22 @@ export function render(container) {
 /* ---------- Layout ---------- */
 
 function buildView() {
-  const v = { items: new Map(), noteKey: '' };
+  const v = { items: new Map(), noteKey: '', readyKey: '' };
   v.fileInput = el('input', { type: 'file', class: 'visually-hidden', tabindex: '-1', 'aria-hidden': 'true', multiple: true, accept: ACCEPT });
   v.fileInput.addEventListener('change', () => {
     addFiles(v.fileInput.files);
     v.fileInput.value = ''; // so the same file can be picked again
   });
-  v.chooseButton = el('button', { type: 'button', class: 'button button-primary', 'aria-describedby': 'drop-hint', onclick: () => v.fileInput.click() }, 'Choose files');
+  v.chooseButton = el('button', { type: 'button', class: 'btn btn-primary', 'aria-describedby': 'drop-hint', onclick: () => v.fileInput.click() }, 'Choose files');
   v.dropTitle = el('p', { class: 'drop-title' }, COPY.dropIdle);
-  v.zone = el('div', { class: 'drop-zone' },
-    el('span', { class: 'drop-icon' }, icon('upload')), v.dropTitle, el('p', { class: 'drop-or' }, 'or'),
-    v.chooseButton, v.fileInput, el('p', { class: 'drop-hint', id: 'drop-hint' }, 'PDF or .docx, up to 10 MB'));
+  v.zone = el('div', { class: 'drop' },
+    el('div', { class: 'drop-text' }, v.dropTitle, el('p', { class: 'drop-hint', id: 'drop-hint' }, COPY.dropHint)),
+    v.chooseButton, v.fileInput);
   bindDropZone(v);
 
   v.textarea = el('textarea', { id: 'paste-text', name: 'text', rows: '8', spellcheck: 'false', 'aria-describedby': 'paste-hint' });
   v.textarea.addEventListener('input', () => setPasteError(v, ''));
-  v.pasteError = el('p', { class: 'field-error', id: 'paste-error', hidden: true });
+  v.pasteError = el('p', { class: 'field-err', id: 'paste-error', hidden: true });
   const onPaste = (event) => {
     event.preventDefault();
     submitPaste(v);
@@ -85,18 +86,19 @@ function buildView() {
     el('label', { class: 'field-label', for: 'paste-text' }, 'Syllabus text'),
     el('p', { class: 'field-hint', id: 'paste-hint' }, COPY.pasteHint),
     v.textarea, v.pasteError,
-    el('button', { type: 'submit', class: 'button button-secondary' }, 'Read it'));
+    el('button', { type: 'submit', class: 'btn btn-secondary btn-sm' }, 'Read it'));
 
-  v.heading = el('h2', { id: 'classes-heading', tabindex: '-1' }, 'Your classes');
+  v.heading = el('h1', { tabindex: '-1' }, 'Feed me your syllabi.');
   v.note = el('div', { class: 'classes-note' });
-  v.list = el('ul', { class: 'class-list', role: 'list' });
-  v.seeDates = el('a', { class: 'button button-primary see-dates', href: '#/dates', hidden: true }, 'See my dates', icon('arrow-right'));
-  v.root = el('div', { class: 'screen upload-screen' },
-    el('header', { class: 'screen-header' }, el('h1', { tabindex: '-1' }, 'Feed me your syllabi.'), el('p', { class: 'lead' }, COPY.lead)),
-    el('div', { class: 'upload-layout' },
-      el('section', { class: 'upload-add', 'aria-label': 'Add a syllabus' },
-        v.zone, el('details', { class: 'paste' }, el('summary', {}, icon('chevron'), 'Paste text instead'), pasteForm)),
-      el('section', { class: 'classes', 'aria-labelledby': 'classes-heading' }, v.heading, v.note, v.list, v.seeDates)));
+  v.list = el('ul', { class: 'files', 'aria-label': 'Your classes' });
+  v.ready = el('div', { class: 'ready', hidden: true });
+  v.root = el('div', { class: 'screen col' },
+    v.heading, el('p', { class: 'lead' }, COPY.lead),
+    el('section', { class: 'add', 'aria-label': 'Add a syllabus' },
+      el('div', { class: 'tab tab-new' }, 'New class'), v.zone,
+      el('p', { class: 'note' }, COPY.deleteNote),
+      el('details', { class: 'paste' }, el('summary', {}, 'Paste text instead'), pasteForm)),
+    v.note, v.list, v.ready);
   return v;
 }
 
@@ -123,7 +125,7 @@ function bindDropZone(v) {
 
 function newRow(fields) {
   return { key: `row-${nextKey++}`, status: 'queued', file: null, text: null, syllabus: null, error: null,
-    editing: false, draft: null, renameError: '', saving: false, justDone: false, ...fields };
+    editing: false, draft: null, renameError: '', saving: false, slow: false, slowTimer: 0, ...fields };
 }
 
 function addRow(fields) {
@@ -196,25 +198,35 @@ async function pump() {
   if (!row) return;
   uploading = true;
   setStatus(row, 'reading');
+  // Reading takes a while. After a bit, say so in words instead of adding more motion.
+  row.slowTimer = window.setTimeout(() => {
+    row.slow = true;
+    view?.items.get(row.key)?.querySelector('.reading-note')?.removeAttribute('hidden');
+  }, SLOW_AFTER_MS);
   try {
     const result = row.kind === 'text' ? await uploadSyllabusText(row.text) : await uploadSyllabusFile(row.file);
     Object.assign(row, { syllabus: result.syllabus, file: null, text: null, error: null });
-    setStatus(row, 'done');
+    finishReading(row, 'done');
   } catch (error) {
     const status = error instanceof ApiError ? error.status : 0;
     const code = error instanceof ApiError ? error.code : '';
     const wait = status === 429 && error.retryAfterSeconds ? ` Try again ${formatRetryAfter(error.retryAfterSeconds)}.` : '';
     row.error = { status, code, message: `${messageFor(error)}${wait}` };
-    setStatus(row, 'error');
+    finishReading(row, 'error');
   } finally {
     uploading = false;
   }
   pump();
 }
 
+function finishReading(row, status) {
+  window.clearTimeout(row.slowTimer);
+  Object.assign(row, { slow: false, slowTimer: 0 });
+  setStatus(row, status);
+}
+
 function setStatus(row, status) {
   row.status = status;
-  row.justDone = status === 'done';
   renderRow(row);
   if (status === 'done') refreshColors();
   syncChrome();
@@ -222,19 +234,10 @@ function setStatus(row, status) {
 }
 
 function statusMessage(row) {
-  if (row.status === 'queued') return `${row.label}: ${COPY.queued}`;
-  if (row.status === 'reading') return `${row.label}: ${COPY.reading}`;
+  if (row.status === 'queued') return `${row.label}: ${ROW_COPY.queued}`;
+  if (row.status === 'reading') return `Reading ${row.label}`;
   if (row.status === 'error') return `${row.label}: ${row.error.message}`;
-  const { class_name: name, item_count: count } = row.syllabus;
-  return count ? `${name}: ${summaryParts(row.syllabus).join(', ')}` : `${name}: ${COPY.zeroItems}`;
-}
-
-/** "14 dates found", then only the parts that aren't zero. */
-function summaryParts({ item_count: found, needs_date_count: needDate, unverified_count: unverified }) {
-  const parts = [`${formatCount(found)} ${plural(found, 'date', 'dates')} found`];
-  if (needDate > 0) parts.push(`${formatCount(needDate)} ${plural(needDate, 'needs a date', 'need a date')}`);
-  if (unverified > 0) parts.push(`${formatCount(unverified)} ${plural(unverified, 'quote', 'quotes')} to double-check`);
-  return parts;
+  return `${row.syllabus.class_name}: ${foundText(row.syllabus)}`;
 }
 
 function say(message) {
@@ -289,7 +292,7 @@ function sortRows() {
 /* ---------- Rows ---------- */
 
 function buildRow(row) {
-  const li = el('li', { class: 'class-row', tabindex: '-1' });
+  const li = el('li', { tabindex: '-1' });
   view.items.set(row.key, li);
   fillRow(li, row);
   return li;
@@ -312,61 +315,28 @@ function rowHasFocus(row) {
 }
 
 function fillRow(li, row) {
+  li.className = row.status === 'error' ? 'file is-error' : 'file';
   li.dataset.status = row.status;
-  const body = el('div', { class: 'class-row-body' },
-    row.editing ? renameForm(row) : el('p', { class: 'class-row-name' }, rowName(row)), statusLine(row));
-  const actions = rowActions(row);
-  li.replaceChildren(el('span', { class: 'class-dot', 'aria-hidden': 'true' }), body, ...(actions.childElementCount ? [actions] : []));
-  paintDot(li, row, classColorMap(doneSyllabi()));
-  row.justDone = false;
+  const color = row.status === 'done' ? classColorMap(doneSyllabi()).get(row.syllabus.id) : undefined;
+  li.replaceChildren(...rowChildren(row, color, {
+    rename: () => startRename(row),
+    cancelRename: () => stopRename(row),
+    saveRename: (input, button) => saveRename(row, input, button),
+    retry: () => retry(row),
+    remove: () => remove(row),
+    canRetry: row.status === 'error' && !NO_RETRY_STATUSES.has(row.error.status) && !NO_RETRY_CODES.has(row.error.code),
+  }));
 }
 
-function rowName(row) {
-  return row.status === 'done' ? row.syllabus.class_name : row.label;
-}
-
-function statusLine(row) {
-  const line = el('p', { class: 'class-row-status' });
-  if (row.status === 'queued') line.append(icon('clock'), el('span', {}, COPY.queued));
-  else if (row.status === 'reading') line.append(icon('spinner', 'icon-spin'), el('span', {}, COPY.reading));
-  else if (row.status === 'error') line.append(icon('alert'), el('span', {}, row.error.message));
-  else if (!row.syllabus.item_count) line.append(icon('info'), el('span', {}, COPY.zeroItems));
-  else line.append(icon('check', row.justDone ? 'is-popping' : ''), el('span', {}, dotted(summaryParts(row.syllabus))));
-  return line;
-}
-
-function rowActions(row) {
-  const actions = el('div', { class: 'class-row-actions' });
-  const name = rowName(row);
-  if (row.status === 'done' && !row.editing) actions.append(rowButton('Rename', name, () => startRename(row), 'rename'));
-  if (row.status === 'error') {
-    const { status, code } = row.error;
-    if (!NO_RETRY_STATUSES.has(status) && !NO_RETRY_CODES.has(code)) actions.append(rowButton('Try again', name, () => retry(row)));
-    actions.append(rowButton('Dismiss', name, () => dismiss(row)));
-  }
-  return actions;
-}
-
-/** Visible text first, then the class for screen readers: "Rename CS 101". */
-function rowButton(label, context, onclick, action = null) {
-  return el('button', { type: 'button', class: 'button button-quiet', 'data-action': action, onclick },
-    label, el('span', { class: 'visually-hidden' }, ` ${context}`));
-}
-
-function paintDot(li, row, colors) {
-  const dot = li.querySelector('.class-dot');
-  const color = row.status === 'done' ? colors.get(row.syllabus.id) : undefined;
-  dot.classList.toggle('is-pending', !color);
-  if (color) dot.style.setProperty('--class-color', color);
-  else dot.style.removeProperty('--class-color');
-}
-
+/** Colors follow the order classes were added, so a new class can change which color a row gets. */
 function refreshColors() {
   if (!view) return;
   const colors = classColorMap(doneSyllabi());
   for (const row of rows) {
-    const li = view.items.get(row.key);
-    if (li) paintDot(li, row, colors);
+    if (row.status !== 'done') continue;
+    const badge = view.items.get(row.key)?.querySelector('.badge');
+    const color = colors.get(row.syllabus.id);
+    if (badge && color) badge.style.setProperty('--class-color', color);
   }
 }
 
@@ -382,44 +352,32 @@ function retry(row) {
   startQueue([row]);
 }
 
-function dismiss(row) {
+/** Take a row that couldn't be read off the list. The toast's Undo puts it back where it was. */
+function remove(row) {
   const index = rows.indexOf(row);
-  if (index !== -1) rows.splice(index, 1);
+  if (index === -1) return;
+  rows.splice(index, 1);
   const li = view?.items.get(row.key);
-  const next = li?.nextElementSibling ?? li?.previousElementSibling ?? view?.heading;
+  const next = li?.nextElementSibling ?? li?.previousElementSibling ?? view?.chooseButton;
   li?.remove();
   view?.items.delete(row.key);
   syncChrome();
   next?.focus();
-  say(`Removed ${row.label}.`);
+  toast(`Removed ${row.label}.`, () => restore(row, index));
+}
+
+function restore(row, index) {
+  if (rows.includes(row)) return;
+  rows.splice(Math.min(index, rows.length), 0, row);
+  if (view) {
+    view.items.clear();
+    view.list.replaceChildren(...rows.map(buildRow));
+    view.items.get(row.key)?.focus();
+  }
+  syncChrome();
 }
 
 /* ---------- Rename ---------- */
-
-function renameForm(row) {
-  const id = `rename-${row.key}`;
-  const errorId = `${id}-error`;
-  const input = el('input', {
-    id, type: 'text', class: 'text-input', value: row.draft ?? row.syllabus.class_name,
-    maxlength: String(MAX_CLASS_NAME_CHARS), autocomplete: 'off', spellcheck: 'false',
-    'aria-invalid': row.renameError ? 'true' : null, 'aria-describedby': row.renameError ? errorId : null,
-  });
-  input.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    stopRename(row);
-  });
-  const save = el('button', { type: 'submit', class: 'button button-secondary' }, 'Save');
-  const onSubmit = (event) => {
-    event.preventDefault();
-    saveRename(row, input, save);
-  };
-  return el('form', { class: 'rename-form', novalidate: true, onsubmit: onSubmit },
-    el('label', { class: 'visually-hidden', for: id }, 'Class name'),
-    el('div', { class: 'rename-controls' },
-      input, save, el('button', { type: 'button', class: 'button button-quiet', onclick: () => stopRename(row) }, 'Cancel')),
-    row.renameError ? el('p', { class: 'field-error', id: errorId }, icon('alert'), el('span', {}, row.renameError)) : null);
-}
 
 function startRename(row) {
   Object.assign(row, { editing: true, draft: null, renameError: '' });
@@ -462,7 +420,7 @@ async function saveRename(row, input, save) {
     if (!row.editing) return;
     renderRow(row);
     if (hadFocus) view?.items.get(row.key)?.querySelector('input')?.focus();
-    else say(`I couldn't rename ${row.syllabus.class_name}. ${row.renameError}`); // the error shows in the row too
+    else say(`I couldn't rename ${rowName(row)}. ${row.renameError}`); // the error shows in the row too
   }
 }
 
@@ -471,25 +429,53 @@ async function saveRename(row, input, save) {
 function syncChrome() {
   if (!view) return;
   const hasRows = rows.length > 0;
-  const hasDone = rows.some((row) => row.status === 'done');
+  const done = doneSyllabi();
   const busy = rows.some((row) => row.status === 'queued' || row.status === 'reading');
-  // Wait for the whole queue, so the dates list never shows half of what's coming.
-  const ready = hasDone && !busy;
-  view.seeDates.hidden = !ready;
-  // Lime marks the one main action: Choose files until every class is read, then See my dates.
-  view.chooseButton.classList.toggle('button-primary', !ready);
-  view.chooseButton.classList.toggle('button-secondary', ready);
+  // Wait for the whole queue, so the dates screen never shows half of what's coming.
+  const ready = done.length > 0 && !busy;
+  // One main action at a time: Choose files until every class is read, then See my dates.
+  view.chooseButton.classList.toggle('btn-primary', !ready);
+  view.chooseButton.classList.toggle('btn-secondary', ready);
   view.list.hidden = !hasRows;
-  const noteKey = `${classList.status}|${hasRows}|${classList.error}`;
+  syncReady(ready, done);
+
+  const noteKey = `${classList.status}|${classList.error}`;
   if (noteKey === view.noteKey) return; // don't rebuild a note that might hold focus
   view.noteKey = noteKey;
-  view.note.replaceChildren(...noteContent(hasRows));
+  view.note.replaceChildren(...noteContent());
 }
 
-function noteContent(hasRows) {
-  if (classList.status === 'loading') {
-    return [el('p', { class: 'loading-note' }, icon('spinner', 'icon-spin'), el('span', {}, 'Checking for your classes…'))];
+/** "Found 11 dates in 3 classes." The panel is rebuilt only when its numbers change. */
+function syncReady(ready, done) {
+  const total = done.reduce((sum, syllabus) => sum + syllabus.item_count, 0);
+  const missing = done.reduce((sum, syllabus) => sum + syllabus.needs_date_count, 0);
+  const key = ready ? `${total}|${missing}|${done.length}` : '';
+  if (key === view.readyKey) return;
+  view.readyKey = key;
+  view.ready.hidden = !ready;
+  if (!ready) {
+    view.ready.replaceChildren();
+    return;
   }
+  if (total === 0) {
+    view.ready.replaceChildren(
+      el('p', { class: 'big-count' }, 'No dates found yet.'),
+      el('p', { class: 'muted' }, "If your syllabus is a scan, try pasting its text."));
+    return;
+  }
+  const classes = `${formatCount(done.length)} ${plural(done.length, 'class', 'classes')}`;
+  const dates = `${formatCount(total)} ${plural(total, 'date', 'dates')}`;
+  let detail = 'Every one has a date.';
+  if (missing === 1) detail = "1 doesn't have a date yet. I'll ask you about it.";
+  else if (missing > 1) detail = `${formatCount(missing)} don't have a date yet. I'll ask you about those.`;
+  view.ready.replaceChildren(
+    el('p', { class: 'big-count' }, `Found ${dates} in ${classes}.`),
+    el('p', { class: 'muted' }, detail),
+    el('div', { class: 'actions' }, el('a', { class: 'btn btn-primary', href: '#/dates' }, 'See my dates')));
+}
+
+function noteContent() {
+  if (classList.status === 'loading') return [el('p', { class: 'note' }, 'Checking for your classes…')];
   if (classList.status === 'error') {
     const retryLoad = () => {
       view?.heading.focus(); // the Try again button is about to go away
@@ -499,7 +485,7 @@ function noteContent(hasRows) {
       el('div', { class: 'notice-body' },
         el('p', { class: 'notice-title' }, "I couldn't check for your classes."),
         el('p', {}, classList.error),
-        el('button', { type: 'button', class: 'button button-secondary', onclick: retryLoad }, 'Try again')))];
+        el('button', { type: 'button', class: 'btn btn-secondary btn-sm', onclick: retryLoad }, 'Try again')))];
   }
-  return hasRows ? [] : [el('p', { class: 'classes-empty' }, COPY.empty)];
+  return [];
 }

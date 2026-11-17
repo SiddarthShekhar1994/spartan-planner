@@ -36,6 +36,7 @@ SELECT
     i.title AS title,
     i.type AS type,
     i.due_date AS due_date,
+    i.extracted_due_date AS extracted_due_date,
     i.date_text AS date_text,
     i.weight AS weight,
     i.source_text AS source_text,
@@ -57,9 +58,9 @@ VALUES (?, ?, ?, ?, ?, ?)
 """
 
 _INSERT_ITEM = """
-INSERT INTO items (syllabus_id, title, type, due_date, date_text, weight, source_text,
+INSERT INTO items (syllabus_id, title, type, due_date, extracted_due_date, date_text, weight, source_text,
                    date_was_ambiguous, source_verified, status, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'unchecked', ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unchecked', ?)
 """
 
 
@@ -89,6 +90,7 @@ def _item_from_row(row: sqlite3.Row) -> ItemOut:
         title=row["title"],
         type=row["type"],
         due_date=row["due_date"],
+        extracted_due_date=row["extracted_due_date"],
         date_text=row["date_text"],
         weight=None if weight is None else float(weight),
         source_text=row["source_text"],
@@ -125,6 +127,7 @@ def create_syllabus(
                 item.title,
                 item.type,
                 item.due_date,
+                item.due_date,  # extracted_due_date: what the syllabus said, kept as it was
                 item.date_text,
                 item.weight,
                 item.source_text,
@@ -160,6 +163,31 @@ def list_items(conn: sqlite3.Connection, *, client_id: str, syllabus_id: int | N
         params.append(syllabus_id)
     rows = _fetchall(conn, sql + _ITEM_ORDER, params)
     return [_item_from_row(row) for row in rows]
+
+
+def get_item(conn: sqlite3.Connection, *, client_id: str, item_id: int) -> ItemOut | None:
+    """One of this client's items, or None if it isn't theirs or doesn't exist."""
+    rows = _fetchall(conn, _ITEM_SELECT + " AND i.id = ?", (client_id, item_id))
+    return _item_from_row(rows[0]) if rows else None
+
+
+def set_item_date(
+    conn: sqlite3.Connection, *, client_id: str, item_id: int, due_date: str | None, status: str
+) -> bool:
+    """Set an item's date and status. False if the item isn't this client's (or doesn't exist).
+
+    ``extracted_due_date`` is never touched: it stays what the syllabus said.
+    """
+    with conn:
+        with closing(
+            conn.execute(
+                "UPDATE items SET due_date = ?, status = ? "
+                "WHERE id = ? AND syllabus_id IN (SELECT id FROM syllabi WHERE client_id = ?)",
+                (due_date, status, item_id, client_id),
+            )
+        ) as cursor:
+            changed = cursor.rowcount
+    return changed == 1
 
 
 def rename_syllabus(conn: sqlite3.Connection, *, client_id: str, syllabus_id: int, class_name: str) -> bool:

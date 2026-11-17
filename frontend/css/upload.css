@@ -1,299 +1,306 @@
-/* Upload screen: the drop zone, the paste box, and "Your classes". */
+/*
+ * Upload screen: the drop box under its "New class" tab, one row per file
+ * (up next, reading, read, couldn't read), and the "Found N dates" panel.
+ */
 
-.upload-layout {
-  display: grid;
-  gap: var(--space-7);
-  margin-top: clamp(2rem, 5vw, 3.5rem);
+.add {
+  margin-top: var(--s6);
 }
 
-@media (min-width: 60em) {
-  .upload-layout {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    align-items: start;
-    gap: clamp(2.5rem, 5vw, 4.5rem);
-  }
+.drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s5);
+  padding: clamp(24px, 3vw, 32px);
+  border: 2px solid var(--line-strong);
+  border-radius: 0 20px 20px 20px;
+  background: var(--card);
 }
 
-.upload-add {
-  display: grid;
-  gap: var(--space-4);
+.drop-text {
+  flex: 1 1 240px;
   min-width: 0;
 }
 
-/* ---------- Drop zone ---------- */
-
-.drop-zone {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2);
-  padding: clamp(2rem, 6vw, 3.5rem) var(--space-5);
-  border: 2px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  text-align: center;
-}
-
-/* While a file is over the zone the title also changes to "Let go to upload".
-   The border goes solid and bright, not lime: lime stays on the one main action. */
-.drop-zone.is-dragging {
-  border-style: solid;
-  border-color: var(--text);
-  background: var(--raised);
-}
-
-.drop-icon {
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  margin-bottom: var(--space-2);
-  border-radius: 50%;
-  background: var(--raised);
-  color: var(--text);
-}
-
-.drop-zone.is-dragging .drop-icon {
-  background: var(--bg);
-}
-
-.drop-icon .icon {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
 .drop-title {
-  font-family: var(--font-display);
-  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.drop-or {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.drop-or::before,
-.drop-or::after {
-  content: "";
-  width: 2.25rem;
-  height: 1px;
-  background: var(--border);
-}
-
-.drop-zone .button {
-  min-width: 11rem;
-  margin-top: var(--space-1);
+  font-family: var(--display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .drop-hint {
-  margin-top: var(--space-2);
-  color: var(--muted);
-  font-size: var(--text-sm);
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+/* A file is over the box: the highlighter marks the place to let go. */
+.drop.is-dragging {
+  border-color: var(--ink);
+  background: var(--hl);
+  color: var(--hl-ink);
+}
+
+.drop.is-dragging .drop-hint {
+  color: var(--hl-ink);
 }
 
 /* ---------- Paste text instead ---------- */
 
+.paste {
+  margin-top: var(--s2);
+}
+
 .paste summary {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
   min-height: var(--hit);
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-1);
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
   list-style: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
 }
 
 .paste summary::-webkit-details-marker {
   display: none;
 }
 
-.paste summary:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.paste summary .icon {
-  color: var(--muted);
-}
-
-.paste[open] summary .icon {
-  transform: rotate(90deg);
-}
-
 .paste-form {
   display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  padding: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  justify-items: start;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+.paste-form .field-err {
+  margin-top: 0;
+}
+
+.paste-form .btn {
+  margin-top: var(--s2);
+}
+
+/* ---------- File rows ---------- */
+
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  margin-top: var(--s6);
+}
+
+.file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s4);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
   background: var(--card);
 }
 
-.paste-form .field-hint {
-  margin-bottom: var(--space-1);
+.file:focus {
+  outline: none;
 }
 
-.paste-form .button {
-  justify-self: start;
-  margin-top: var(--space-2);
+.file:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
-/* ---------- Your classes ---------- */
-
-.classes {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0;
-  container-type: inline-size;
-}
-
-.classes-note:empty {
-  display: none;
-}
-
-.classes-empty {
-  padding: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--muted);
-}
-
-.class-list {
-  display: grid;
-  gap: 0.625rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.class-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  column-gap: 0.875rem;
-  row-gap: var(--space-3);
-  padding: var(--space-4) 1.125rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-.class-row > .class-dot {
-  margin-top: 0.45rem;
-}
-
-.class-row-body {
-  display: grid;
-  gap: 0.125rem;
+.file-who {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: var(--s1);
   min-width: 0;
 }
 
-.class-row-name {
+.file-name {
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
-.class-row-status {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.class-row-status > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.class-row-status .icon {
-  width: 1.15em;
-  height: 1.15em;
-  margin-top: 0.15em;
-}
-
-.class-row[data-status="done"] .icon-check {
-  color: var(--cheer);
-}
-
-.class-row[data-status="error"] {
-  border-color: var(--warning-line);
-}
-
-.class-row[data-status="error"] .class-row-status {
-  color: var(--text);
-}
-
-.class-row[data-status="error"] .class-row-status .icon {
-  color: var(--warning);
-}
-
-.class-row-actions {
+.file-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  grid-column: 2;
+  gap: 0 var(--s4);
 }
 
-/* With room to spare, Rename sits to the right of a finished class. */
-@container (min-width: 26rem) {
-  .class-row[data-status="done"] {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .class-row[data-status="done"] .class-row-actions {
-    grid-column: auto;
-  }
+.file.is-error {
+  border-color: var(--amb-line);
+  background: var(--amb-tint);
 }
 
-.rename-form {
+.file.is-error .file-why {
+  color: var(--amb-ink);
+}
+
+.badge {
   display: grid;
-  gap: var(--space-2);
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--class-color, var(--panel));
+  color: var(--class-ink);
 }
+
+.badge-wait {
+  border: 2px dashed var(--line-strong);
+  background: var(--panel);
+}
+
+.badge-bad {
+  background: var(--amb-fill);
+}
+
+/* Reading: a little page with one slow highlighter pass. */
+.reading {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s4);
+  width: 100%;
+}
+
+.page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  height: 120px;
+  padding: var(--s3);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.page i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--page-line);
+}
+
+.sweep {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 22px;
+  background: var(--hl);
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  transform: translateY(8px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sweep {
+    opacity: 0.35;
+    mix-blend-mode: normal;
+  }
+}
+
+/* ---------- Rename a class ---------- */
 
 .rename-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--s2) var(--s3);
 }
 
 .rename-controls .text-input {
-  flex: 1 1 13rem;
-  min-width: 0;
+  flex: 1 1 200px;
+  width: auto;
 }
 
-.see-dates {
-  justify-self: start;
-  margin-top: var(--space-2);
+/* ---------- "Found N dates in N classes." ---------- */
+
+.ready {
+  margin-top: var(--s6);
+  padding: var(--s5);
+  border-radius: 20px;
+  background: var(--panel);
 }
 
-@media (max-width: 34.99em) {
-  .see-dates {
-    justify-self: stretch;
+.big-count {
+  font-family: var(--display);
+  font-size: clamp(1.75rem, 1vw + 1.5rem, 2.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+
+.ready .muted {
+  margin-top: var(--s2);
+}
+
+.ready .actions {
+  margin-top: var(--s5);
+}
+
+@supports (corner-shape: squircle) {
+  .drop,
+  .file,
+  .ready {
+    corner-shape: squircle;
   }
 }
 
-/* ---------- Motion ---------- */
+@media (max-width: 599px) {
+  .drop .btn {
+    width: 100%;
+  }
+
+  /* Leave room for Rename on the same line as the class name. */
+  .file-who {
+    flex-basis: 150px;
+  }
+
+  .reading {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .page {
+    height: 84px;
+    padding: var(--s2);
+  }
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  .class-row {
-    animation: rise var(--duration) var(--ease-out) both;
+  @keyframes sweep {
+    from {
+      transform: translateY(-4px);
+    }
+    to {
+      transform: translateY(100px);
+    }
   }
 
-  .paste summary .icon,
-  .drop-icon {
-    transition: transform 160ms var(--ease-out);
+  @keyframes sweep-phone {
+    from {
+      transform: translateY(-4px);
+    }
+    to {
+      transform: translateY(64px);
+    }
   }
 
-  .drop-zone.is-dragging .drop-icon {
-    transform: translateY(-4px) scale(1.06);
+  /* Once, slowly, then it rests at the foot of the page. */
+  .sweep {
+    animation: sweep 6s ease-in-out both;
+  }
+
+  @media (max-width: 599px) {
+    .sweep {
+      animation-name: sweep-phone;
+    }
   }
 }

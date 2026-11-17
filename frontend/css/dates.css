@@ -1,328 +1,313 @@
-/* Dates screen: every deadline with the sentence it came from. */
+/*
+ * "Got N dates." screen: an amber box for dates the syllabus doesn't give, then every date
+ * grouped by week. A row opens to show its source sentence, with the date words highlighted.
+ */
 
-.dates-screen {
-  max-width: var(--column-max);
-  margin-inline: auto;
+/* ---------- Dates the syllabus doesn't give ---------- */
+
+.needs {
+  margin-top: var(--s6);
+  padding: var(--s5);
+  border: 1.5px solid var(--amb-line);
+  border-radius: 20px;
+  background: var(--amb-tint);
 }
 
-.dates-body {
-  display: grid;
-  gap: clamp(2.5rem, 6vw, 3.5rem);
-  margin-top: clamp(2rem, 5vw, 3rem);
+.needs h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--amb-ink);
 }
 
-.dates-loading,
-.dates-section {
-  display: grid;
-  gap: var(--space-4);
+.need {
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1.5px solid var(--amb-line);
 }
 
-.section-note {
-  margin-top: calc(-1 * var(--space-2));
-  color: var(--muted);
+.need:first-of-type {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.date-list {
-  display: grid;
-  gap: 0.875rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* ---------- A deadline card ----------
-   Reading order is title, tags, date, source. The grid shows the tags first, and on
-   wider screens puts the date in its own column like an agenda. */
-
-.date-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    "tags"
-    "title"
-    "when"
-    "source"
-    "warn";
-  align-content: start;
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-}
-
-.date-card-tags {
+.need-title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
-  min-width: 0;
-  grid-area: tags;
-}
-
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: 100%;
-  padding: 0.3rem 0.7rem;
-  border-radius: var(--radius-sm);
-  background: var(--raised);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.class-chip-name {
-  min-width: 0;
+  gap: var(--s1) var(--s2);
   overflow-wrap: anywhere;
 }
 
-.date-card-meta {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.date-card-title {
-  margin-top: 0.875rem;
-  overflow-wrap: anywhere;
-  grid-area: title;
-}
-
-.date-card-when {
-  margin-top: var(--space-2);
-  grid-area: when;
-}
-
-.due-date {
-  display: block;
-  font-size: 1.125rem;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.due-day {
-  font-family: var(--font-display);
-  font-size: 1.625rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.due-sep {
-  white-space: pre;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.3rem 0.625rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.badge .icon {
-  width: 1.1em;
-  height: 1.1em;
-}
-
-.badge-warning {
-  border: 1px solid var(--warning-line);
-  background: var(--warning-surface);
-  color: var(--warning);
-}
-
-.source {
-  margin-top: var(--space-4);
-  padding: 0.875rem var(--space-4);
-  border-left: 3px solid var(--border-strong);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--bg);
-  grid-area: source;
-}
-
-.source figcaption {
-  color: var(--muted);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.source blockquote {
-  margin-top: 0.375rem;
-}
-
-.source blockquote p {
+.need-q {
+  margin-top: var(--s1);
+  font-size: 1rem;
   overflow-wrap: anywhere;
 }
 
-.source-warning {
+.need-row {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  font-size: var(--text-sm);
-  grid-area: warn;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s3);
 }
 
-.source-warning .icon {
-  margin-top: 0.1em;
-  color: var(--warning);
+/* ---------- The highlighter ---------- */
+
+mark.hl {
+  padding: 0.04em 0.2em;
+  border-radius: 0.3em;
+  background: var(--hl);
+  color: var(--hl-ink);
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
-@media (min-width: 40em) {
-  .date-card {
-    grid-template-columns: 10rem minmax(0, 1fr);
-    grid-template-rows: auto auto auto 1fr;
-    grid-template-areas:
-      "when tags"
-      "when title"
-      "when source"
-      "when warn";
-    column-gap: var(--space-5);
-    padding: var(--space-5) 1.75rem;
-  }
-
-  .date-card-when {
-    align-self: stretch;
-    margin-top: 0;
-    padding-right: var(--space-4);
-    border-right: 1px solid var(--border);
-  }
-
-  .due-date {
-    display: grid;
-    justify-items: start;
-  }
-
-  /* The ", " pieces stay for screen readers and copying, but the tile stacks the parts. */
-  .due-sep {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-  }
-
-  .due-weekday,
-  .due-year {
-    color: var(--muted);
-    font-size: var(--text-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .due-day {
-    margin-block: 0.125rem;
-    font-size: 2rem;
-    line-height: 1.05;
-  }
+mark.hl-amb {
+  background: var(--amb-fill);
+  color: var(--class-ink);
 }
 
-/* ---------- Loading, empty, footer ---------- */
+/* ---------- Weeks ---------- */
 
-.skeleton-card {
-  min-height: 10rem;
+.week-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin: var(--s6) 0 var(--s3);
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.skeleton {
-  display: block;
-  border-radius: 8px;
-  background: var(--raised);
+.week-count {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
-.skeleton-tags {
-  width: 12rem;
-  max-width: 70%;
-  height: 1.75rem;
-  grid-area: tags;
+.dlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
 }
 
-.skeleton-title {
-  width: 60%;
-  height: 1.5rem;
-  margin-top: 0.875rem;
-  grid-area: title;
-}
-
-.skeleton-when {
-  width: 9rem;
-  height: 1.75rem;
-  margin-top: var(--space-2);
-  grid-area: when;
-}
-
-.skeleton-source {
-  height: 4rem;
-  margin-top: var(--space-4);
-  grid-area: source;
-}
-
-@media (min-width: 40em) {
-  .skeleton-when {
-    width: 6rem;
-    height: 4.5rem;
-    margin-top: 0;
-  }
-}
-
-.empty-state {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-3);
-  padding: clamp(1.5rem, 5vw, 2.5rem);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+.drow {
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
   background: var(--card);
 }
 
-.empty-icon {
+.drow-toggle {
   display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--raised);
-  color: var(--cheer);
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s4);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--s3) var(--s4);
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
 }
 
-.empty-icon .icon {
-  width: 1.5rem;
-  height: 1.5rem;
+.drow-toggle:focus-visible {
+  outline-offset: -3px;
+  border-radius: 14px;
 }
 
-.empty-text {
-  color: var(--muted);
-}
-
-.empty-state .button {
-  margin-top: var(--space-2);
-}
-
-.dates-footer {
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border);
-}
-
-@media (max-width: 34.99em) {
-  .empty-state .button,
-  .dates-footer .button {
-    width: 100%;
+@media (hover: hover) {
+  .drow-toggle:hover {
+    background: var(--panel);
   }
 }
 
-/* ---------- Motion ---------- */
+.dday {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.dday small {
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dday b {
+  font-family: var(--display);
+  font-size: 1.625rem;
+  font-weight: 800;
+}
+
+.dwhat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.dwhat-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dwhat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s3);
+  min-width: 0;
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  color: var(--amb-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.flag .ic {
+  width: 16px;
+  height: 16px;
+}
+
+.flag-quiet {
+  color: var(--ink-2);
+}
+
+.drow.is-open .chev {
+  transform: rotate(90deg);
+}
+
+.more {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: 0 var(--s4) var(--s4) calc(var(--s4) + 52px + var(--s4));
+}
+
+.src-cap {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.src {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.warn {
+  color: var(--amb-ink);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.more .need-row {
+  margin-top: 0;
+}
+
+.more .field-err {
+  margin-top: 0;
+}
+
+/* ---------- Closed groups: dates already passed, and items waiting for a date ---------- */
+
+.group {
+  margin-top: var(--s6);
+}
+
+.group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: var(--hit);
+  list-style: none;
+  font-family: var(--display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.group summary::-webkit-details-marker {
+  display: none;
+}
+
+.group-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.group[open] > summary .chev {
+  transform: rotate(90deg);
+}
+
+.group .dlist {
+  margin-top: var(--s2);
+}
+
+.group-note {
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+/* A row with no date yet: a dash where the day would be. */
+.dday-none b {
+  color: var(--ink-2);
+}
+
+/* ---------- Loading ---------- */
+
+.dates-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-top: var(--s6);
+}
+
+.skeleton-row {
+  height: 68px;
+  border-radius: 16px;
+}
+
+@supports (corner-shape: squircle) {
+  .needs,
+  .drow {
+    corner-shape: squircle;
+  }
+}
+
+@media (max-width: 599px) {
+  .more {
+    padding-left: var(--s4);
+  }
+
+  .need-row .date-in {
+    flex: 1 1 100%;
+  }
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  .date-card:not(.skeleton-card) {
-    animation: rise var(--duration) var(--ease-out) both;
-    animation-delay: calc(min(var(--i, 0), 12) * 35ms);
+  .chev {
+    transition: transform 0.2s ease-out;
   }
 
-  .skeleton {
-    animation: pulse 1.4s ease-in-out infinite;
+  .more {
+    animation: fade-in 0.2s ease-out both;
   }
 }

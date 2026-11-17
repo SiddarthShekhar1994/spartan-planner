@@ -16,6 +16,9 @@ from backend.prompts import V1_FIELD_DESCRIPTIONS
 
 ITEM_TYPES: tuple[str, ...] = ("exam", "quiz", "project", "essay", "homework", "reading", "other")
 ItemType = Literal["exam", "quiz", "project", "essay", "homework", "reading", "other"]
+# "unchecked": as extracted. "edited": the student's date differs from the extracted one.
+# "skipped": the student picked "Not sure yet", so the item stays off the plan.
+ItemStatus = Literal["unchecked", "edited", "skipped"]
 
 
 def _normalize_type(value: object) -> object:
@@ -80,13 +83,14 @@ class ItemOut(BaseModel):
     syllabus_id: int
     title: str
     type: ItemType
-    due_date: str | None
+    due_date: str | None  # the date the plan uses: the student's, once they set one
+    extracted_due_date: str | None  # what extraction found, never changed afterwards
     date_text: str | None
     weight: float | None
     source_text: str
     date_was_ambiguous: bool
     source_verified: bool
-    status: str
+    status: ItemStatus
     created_at: str
 
 
@@ -118,7 +122,20 @@ class ItemListResponse(BaseModel):
     items: list[ItemOut]
 
 
+class ItemResponse(BaseModel):
+    item: ItemOut
+
+
 class RenameRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     class_name: str
+
+
+class ItemDateRequest(BaseModel):
+    """Set, change or clear one item's date. ``due_date`` must be sent, as YYYY-MM-DD or null."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    due_date: str | None
+    not_sure: bool = False  # only with a null date: the student picked "Not sure yet"

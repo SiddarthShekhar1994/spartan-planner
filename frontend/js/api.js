@@ -92,6 +92,18 @@ export async function listItems() {
   return expectArray(await request('GET', '/api/items'), 'items');
 }
 
+/**
+ * Set, change or clear one item's date. `dueDate` is "YYYY-MM-DD" or null; `notSure` (only with
+ * null) marks it "Not sure yet". Sending the same thing twice is safe. Resolves to the saved item.
+ */
+export async function saveItemDate(id, { dueDate, notSure = false }) {
+  const data = await request('PATCH', `/api/items/${encodeURIComponent(id)}`, {
+    json: { due_date: dueDate, not_sure: notSure },
+  });
+  if (!isObject(data.item)) throw malformed(200);
+  return data.item;
+}
+
 async function readJson(response) {
   try {
     const text = await response.text();
