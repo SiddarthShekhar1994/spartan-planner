@@ -1,0 +1,38 @@
+San José State University
+CS 101: Introduction to Programming
+Section 02 · Fall 2026
+Instructor: Dr. Rivera · Office hours: Tuesdays 1:00–2:30 PM, MQH 228
+
+Course description
+This course introduces programming in Python: variables, control flow, functions, lists, and files. Bring a laptop to every class.
+
+Grading
+Homework (8 assignments)  20%
+Quizzes  10%
+Essay 1  10%
+Midterm exam  20%
+Final project  15%
+Final exam  25%
+
+Important dates
+Quiz 1 is on Thursday, September 10, at the start of class.
+Read Chapter 5 of Think Python before class on Monday, September 21.
+Essay 1, “Why Programs Fail,” is due Friday, October 2 by 11:59 PM.
+The midterm exam is on Wednesday,
+October 14, in class.
+
+Schedule
+Week | Date | Due
+Week 9 | Oct 19 | Homework 4 due
+Week 11 | Nov 2 | Lecture: files and exceptions
+
+The project proposal is due Tuesday, November 3.
+Project check-in meetings will be held Dec 7–11; sign up for a slot.
+Final project presentations happen during the last week of class.
+Lab report 3: due date TBA.
+Reading responses are due every Friday before class.
+The final exam is Monday, December 14, 9:45–12:00, in our usual room.
+
+Policies
+Late work loses 10% per day. No class on Wednesday, November 11 (Veterans Day).
+The last day to drop is September 15.

@@ -1,0 +1,23 @@
+{
+  "_about": "What services.postprocess.clean_items must produce from sample_model_output.json checked against sample_syllabus.txt. Items stay in model order; one is dropped as a duplicate.",
+  "class_name": "CS 101: Introduction to Programming",
+  "counts": {"item_count": 13, "dated_count": 6, "needs_date_count": 7, "unverified_count": 1},
+  "dropped": [
+    "Midterm exam (exact duplicate of the earlier Midterm exam)"
+  ],
+  "items": [
+    {"title": "Quiz 1", "type": "quiz", "due_date": "2026-09-10", "date_text": "Thursday, September 10", "weight": null, "date_was_ambiguous": false, "source_verified": true, "why": "clean exact quote"},
+    {"title": "Essay 1: Why Programs Fail", "type": "essay", "due_date": "2026-10-02", "date_text": "Friday, October 2", "weight": 10.0, "date_was_ambiguous": false, "source_verified": true, "why": "straight quotes match the syllabus's curly quotes"},
+    {"title": "Midterm exam", "type": "exam", "due_date": "2026-10-14", "date_text": "Wednesday, October 14", "weight": 20.0, "date_was_ambiguous": false, "source_verified": true, "why": "type 'Exam' normalized; quote matches across the syllabus's line break"},
+    {"title": "Homework 4", "type": "homework", "due_date": "2026-10-19", "date_text": "Oct 19", "weight": null, "date_was_ambiguous": false, "source_verified": true, "why": "table row quote"},
+    {"title": "Project proposal", "type": "project", "due_date": null, "date_text": "Tuesday, November 3", "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "2026-11-31 is not a real date"},
+    {"title": "Project check-in meeting", "type": "project", "due_date": null, "date_text": "Dec 7–11", "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "date_text is a range"},
+    {"title": "Final project presentation", "type": "project", "due_date": null, "date_text": null, "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "vague date; weight 150 is out of range"},
+    {"title": "Lab report 3", "type": "other", "due_date": null, "date_text": null, "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "unknown type 'lab' becomes other; ambiguous=true forces the date off"},
+    {"title": "Reading response", "type": "reading", "due_date": null, "date_text": null, "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "recurring rule"},
+    {"title": "Read Chapter 5 of Think Python", "type": "reading", "due_date": null, "date_text": "Monday, September 21", "weight": null, "date_was_ambiguous": true, "source_verified": true, "why": "date_text says Sep 21 but due_date says Sep 22"},
+    {"title": "Final exam", "type": "exam", "due_date": "2026-12-14", "date_text": "Monday, December 14", "weight": 25.0, "date_was_ambiguous": false, "source_verified": true, "why": "time range 9:45–12:00 is outside date_text, so it's not a date range"},
+    {"title": "Final exam", "type": "exam", "due_date": null, "date_text": null, "weight": 25.0, "date_was_ambiguous": true, "source_verified": true, "why": "grading-table row: no date phrase, so no date; its sentence differs from the dated Final exam's, so it is not dropped as a copy"},
+    {"title": "Homework 6", "type": "homework", "due_date": "2026-11-20", "date_text": "Friday, November 20", "weight": null, "date_was_ambiguous": false, "source_verified": false, "why": "quote is not in the syllabus: kept, flagged"}
+  ]
+}
