@@ -1,5 +1,48 @@
 # Changelog
 
+## Card-file look and automatic dates, stage one (2026-11-17)
+
+The upload screen and the dates screen now look and work like the demo Sid approved. Dates go in on their own. Nothing is confirmed one by one.
+
+### What changed
+
+- New look: a warm off-white page by default, a dark theme that follows the device, Lexend headings, Atkinson Hyperlegible body, one spacing scale, solid hover swaps, and three icons only (check, warning, arrow).
+- Upload screen: the drop box under a "New class" tab, one row per file (up next, reading, read, couldn't read), and a "Found N dates in N classes." panel with "See my dates". While a file is read, a little page gets one slow highlighter pass.
+- "Got N dates." replaces the plain list: dates grouped by week, tap a row for the source sentence with the date words highlighted, "Change the date", a "Worth a look" flag when the sentence couldn't be found, and "You set this" on a date the student changed.
+- An amber box asks only about dates the syllabus doesn't give: "I didn't guess. When is it actually due?", with Add and "Not sure yet".
+- Toasts with Undo for adding a date, changing a date, "Not sure yet" and removing a file.
+- `PATCH /api/items/{id}` saves a date, clears it, or marks the item "Not sure yet". Migration 002 adds `extracted_due_date`, which keeps what the syllabus said and is never overwritten. Item `status` is now `unchecked` (as extracted), `edited` (the student's date differs) or `skipped` ("Not sure yet").
+- Tests: 746 offline tests, up from 697. New ones cover the date endpoint and the migration, plus browser-side unit tests for week grouping, highlighting and formatting, run with Node's built-in test runner.
+
+### Sid's decisions (2026-11-17)
+
+- Dates that have already passed go in one closed "Already passed" group at the bottom.
+- "Paste text instead" and Rename stay, as plain text links.
+- Date changes are saved on the server, not only in the browser.
+
+### Added during the build, not yet approved by Sid
+
+- The server refuses a date outside the years 2000 to 2100, to catch a mistyped year.
+- Items marked "Not sure yet" sit in a closed "Not sure yet" group so a date can still be added later. In the demo they disappeared.
+- A class chip shows the course code ("CS 146") when the class name starts with one, and the whole name otherwise.
+- After 15 seconds of reading, the row adds "Still reading. Long ones can take a minute."
+
+### Different from the demo, on purpose
+
+- No date chips while a file is being read: the dates aren't known until Claude answers.
+- The progress dots, "Build my plan" and the line "They're in your plan already." are left out until the setup questions and the plan screen exist.
+- A row opens at once with a short fade. The demo animated its height, and the brief allows only transform and opacity.
+- Dark mode follows the device. The demo's theme switch and "Start over" were demo tools.
+
+### Known gaps
+
+- Only the date can be edited so far, not the title, type or weight.
+- A class that has been read can't be removed yet.
+- After "Not sure yet", the upload screen's "N don't have a date yet. I'll ask you about those." still counts that item.
+- A date is saved before the screen updates, rather than updating first and saving after.
+- Uploads have no idempotency key yet, so "Try again" after a dropped connection can read the same syllabus twice.
+- The server sends no cache header for frontend files, so a browser can keep an old copy after a change (Ctrl+F5).
+
 ## Build 1 (2026-11-15)
 
 Upload a syllabus and see every deadline next to the exact sentence it came from.

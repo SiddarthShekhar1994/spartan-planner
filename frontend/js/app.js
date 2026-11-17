@@ -2,11 +2,13 @@
  * App shell: startup plus a small hash router.
  * #/ (or an empty or unknown hash) shows the upload screen; #/dates shows the dates screen.
  * Each screen module exports render(container) and may return a cleanup function.
+ * Because every screen is a hash, the browser's Back button steps back through the flow.
  */
 import { getClientId } from './client-id.js';
 import { el } from './icons.js';
 import * as datesScreen from './screens/dates.js';
 import * as uploadScreen from './screens/upload.js';
+import { clearToast } from './toast.js';
 
 const HOME = '#/';
 const ROUTES = new Map([
@@ -28,6 +30,7 @@ function show() {
   const isFirstRender = currentRoute === null;
   const route = ROUTES.get(routeKey);
   runCleanup();
+  clearToast(); // an Undo from the last screen has nothing to act on here
   main.replaceChildren();
   currentRoute = routeKey;
   document.title = route.title;
@@ -58,12 +61,11 @@ function runCleanup() {
 
 /** Shown only if a screen fails to draw, so the page is never left blank. */
 function crashView() {
-  return el('div', { class: 'screen' },
-    el('header', { class: 'screen-header' },
-      el('h1', { tabindex: '-1' }, 'Something broke on my end.'),
-      el('p', { class: 'lead' }, 'Reload the page and try again.')),
-    el('p', { class: 'crash-action' },
-      el('button', { type: 'button', class: 'button button-primary', onclick: () => window.location.reload() }, 'Reload the page')));
+  return el('div', { class: 'screen col' },
+    el('h1', { tabindex: '-1' }, 'Something broke on my end.'),
+    el('p', { class: 'lead' }, 'Reload the page and try again.'),
+    el('div', { class: 'actions' },
+      el('button', { type: 'button', class: 'btn btn-primary', onclick: () => window.location.reload() }, 'Reload the page')));
 }
 
 function hasFiles(event) {
@@ -79,7 +81,7 @@ function start() {
     main.focus();
   });
 
-  // A file dropped outside the drop zone would make the browser leave the app to open it.
+  // A file dropped outside the drop box would make the browser leave the app to open it.
   window.addEventListener('dragover', (event) => {
     if (!hasFiles(event) || event.defaultPrevented) return;
     event.preventDefault();

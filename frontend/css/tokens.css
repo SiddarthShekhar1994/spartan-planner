@@ -1,74 +1,99 @@
 /*
- * Spartan Planner design tokens. Every color, font, size and timing lives here.
- * Dark is the default and only theme. Lime is saved for the one main action on a
- * screen and for focus rings.
+ * Spartan Planner design tokens: every color, font and space lives here.
+ * Light is the default, a warm off-white page. Dark follows the device setting.
+ * Lime is the highlighter: it marks the date words in a source sentence and the picked choice.
+ * Amber means "needs your eyes".
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Surfaces */
-  --bg: #0D0F1C;
-  --card: #171A2C;
-  --raised: #1F2340;
-  --raised-hover: #282D50;
-  --border: #2C3155;          /* decorative lines only */
-  --border-strong: #737CB3;   /* inputs, the drop zone, any interactive edge: 3:1 or more on card and bg */
+  --bg: #F5F3EE;
+  --card: #FFFEFA;
+  --panel: #F0EDE5;          /* raised */
+  --line: #DEDACF;           /* card borders */
+  --line-strong: #8A8578;    /* inputs and the drop box: 3:1 or more on the page */
+  --page-line: #E2DED4;      /* the lines on the little page shown while a file is read */
+  --tab-grey: #E3DFD4;       /* the "New class" tab */
 
   /* Text */
-  --text: #F3F1FF;
-  --muted: #A7ACC8;
+  --ink: #1C1B18;
+  --ink-2: #57534A;          /* muted */
 
-  /* Meaning */
-  --accent: #C8F560;
-  --accent-hover: #D3F780;
-  --accent-ink: #0D0F1C;      /* text on lime */
-  --warning: #FFB547;
-  --warning-surface: #332D2F; /* amber at 12% over a card */
-  --warning-line: #745837;    /* amber at 40% over a card, decorative */
-  --cheer: #9B8CFF;
+  /* The main button, and its solid hover swap */
+  --btn-bg: #1C1B18;
+  --btn-ink: #FFFEFA;
+  --btn-hover-bg: #C8F560;
+  --btn-hover-ink: #1C1B18;
 
-  /* Class colors, always shown next to the class name. js/class-colors.js cycles them. */
+  /* Highlighter */
+  --hl: #C8F560;
+  --hl-ink: #1C1B18;
+
+  /* Amber: needs your eyes */
+  --amb-fill: #FFB547;
+  --amb-tint: #FFF0D4;
+  --amb-line: #B8761A;
+  --amb-ink: #7A4300;
+
+  /* Class colors, always shown with the class name. js/class-colors.js cycles them. */
   --class-1: #7AA2FF;
   --class-2: #FF8FB1;
   --class-3: #6EE7B7;
+  --class-ink: #16171D;      /* text on a class color, in both themes */
+
+  --focus: #1C1B18;
+  --toast-bg: #1C1B18;
+  --toast-ink: #FFFEFA;
 
   /* Type */
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --text-xs: 0.8125rem;                                  /* 13px, small-caps labels */
-  --text-sm: 0.9375rem;                                  /* 15px */
-  --text-md: 1.0625rem;                                  /* 17px, body */
-  --text-lg: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);    /* lead paragraphs */
-  --text-h3: 1.3125rem;
-  --text-h2: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
-  --text-h1: clamp(2.375rem, 1.5rem + 4vw, 4.25rem);
-  --leading-tight: 1.04;
-  --leading-body: 1.55;
+  --display: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Space */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
-  --gutter: clamp(1rem, 4vw, 2.5rem);
-  --page-max: 72rem;
-  --column-max: 55rem;                                   /* about 880px, the dates column */
-  --hit: 2.75rem;                                        /* 44px minimum tap target */
+  /* Space: one scale, nothing in between */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --gutter: clamp(16px, 4vw, 48px);
+  --page-max: 1136px;
+  --col-max: 680px;
+  --hit: 44px;               /* smallest tap target */
+}
 
-  /* Shape */
-  --radius-sm: 10px;
-  --radius: 14px;
-  --radius-lg: 20px;
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
 
-  /* Focus */
-  --focus-ring: 3px solid var(--accent);
-  --focus-offset: 2px;
+    --bg: #0D0F1C;
+    --card: #171A2C;
+    --panel: #1F2340;
+    --line: #4A5190;
+    --line-strong: #737CB3;
+    --page-line: #3A4072;
+    --tab-grey: #2C3155;
 
-  /* Motion, used only inside prefers-reduced-motion: no-preference */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration: 200ms;
+    --ink: #F3F1FF;
+    --ink-2: #A7ACC8;
+
+    --btn-bg: #C8F560;
+    --btn-ink: #0D0F1C;
+    --btn-hover-bg: #F3F1FF;
+    --btn-hover-ink: #0D0F1C;
+
+    --hl: #C8F560;
+    --hl-ink: #0D0F1C;
+
+    --amb-fill: #FFB547;
+    --amb-tint: #332D2F;
+    --amb-line: #A8793E;
+    --amb-ink: #FFB547;
+
+    --focus: #C8F560;
+    --toast-bg: #F3F1FF;
+    --toast-ink: #0D0F1C;
+  }
 }

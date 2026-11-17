@@ -1,17 +1,20 @@
 # Spartan Planner
 
-Turns course syllabi into a semester plan. This is Build 1 of 5: upload a syllabus and see every deadline next to the exact sentence it came from.
+Turns course syllabi into a semester plan. So far: upload a syllabus and get every deadline, each with the exact sentence it came from. Dates go in on their own. You only fill in the ones the syllabus doesn't give.
 
-## What Build 1 does
+## What it does so far
 
-- **Upload.** Drop PDF or Word (.docx) files on the upload screen, pick them with "Choose files", or paste the text. Syllabi are read one at a time. Each class shows "Waiting in line…", then "Reading it now…", then a summary such as "12 dates found · 6 need a date · 1 quote to double-check". "See my dates" appears once every syllabus in line has been read, so the list is never half done.
+- **Upload.** Drop PDF or Word (.docx) files on the upload screen, pick them with "Choose files", or use "Paste text instead". Syllabi are read one at a time. Each file shows "Up next", then "Reading…", then its class name with "12 dates found". A file that can't be read turns amber, with Remove (and Undo). "Found N dates in N classes." and "See my dates" appear once every file in line has been read, so the dates screen is never half done.
 - **Find the deadlines.** The server pulls the text out of the file and sends it to Claude (`claude-haiku-5-5` unless `.env` says otherwise), which lists every assignment, quiz, exam, essay, project and required reading with the sentence it came from.
 - **Check Claude's answer.** Before anything is saved, the app checks each item itself: the quoted sentence must really be in the syllabus, the date must match the date phrase in that sentence and fall inside the term the syllabus states, and copies of the same deadline are dropped. Vague dates ("TBA", "last week of class", "Dec 7–11") are saved with no date and show as "Needs a date". It never guesses a date.
-- **Class names.** Read from the syllabus (for example "CS 101: Introduction to Programming"). Every class has a Rename button.
-- **Your dates.** "See my dates" lists every deadline, dated ones first by date, then the ones that need a date. Each card shows the class (with its color), the type and weight, the date, and the source sentence. If the sentence couldn't be found in the syllabus, the card says so.
+- **Class names.** Read from the syllabus (for example "CS 101: Introduction to Programming"). Every class has a Rename link.
+- **Your dates.** "Got N dates." lists every date grouped by week (Monday to Sunday). Nothing is confirmed one by one. Tap a row to see its source sentence with the date words highlighted, and to change the date. If the sentence couldn't be found in the syllabus, the date still goes in with a "Worth a look" flag. Dates that have already passed sit in one closed group at the bottom.
+- **Dates the syllabus doesn't give.** An amber box asks "I didn't guess. When is it actually due?" for each one. Add a date, or pick "Not sure yet": that item moves to a closed "Not sure yet" group and stays out until it has a date.
+- **Undo.** Adding or changing a date, "Not sure yet" and removing a file each show a toast with Undo. The browser's Back button steps back through the screens.
+- **Light and dark.** Light is the default. Dark follows the device setting.
 - **No accounts.** The browser makes a random ID on the first visit and sends it with every request. Each browser sees only its own classes.
 
-Not in Build 1: checking dates one card at a time, the study-hours and extended-time questions, the plan, and the calendar export. They come in builds 2 and 3.
+Not built yet: the study-hours and extended-time questions, the plan, and the calendar export.
 
 The API, if you want to poke at it at http://127.0.0.1:8000/docs (every request needs an `X-Client-Id` header holding a UUID):
 
@@ -21,6 +24,7 @@ The API, if you want to poke at it at http://127.0.0.1:8000/docs (every request 
 | `GET /api/syllabi` | This browser's classes, oldest first. |
 | `PATCH /api/syllabi/{id}` | Rename a class: JSON `{"class_name": "CS 101"}`. |
 | `GET /api/items` | Every deadline for this browser. |
+| `PATCH /api/items/{id}` | Set, change or clear one date: JSON `{"due_date": "2026-12-08"}` or `{"due_date": null}`. Add `"not_sure": true` with a null date for "Not sure yet". The date extraction found stays in `extracted_due_date`. |
 
 ## Setup (once)
 
@@ -94,7 +98,7 @@ Then open http://127.0.0.1:8000. Stop the server with Ctrl+C.
 - **Why `--reload-dir backend`:** `--reload` restarts the server when a Python file changes. Without `--reload-dir`, uvicorn checks every `.py` file under the project folder several times a second, including the thousands inside `.venv`. With it, only `backend\` is watched. Frontend files never need a restart, because the server reads them from disk on every request: just reload the page.
 - `.env` is read once, when the server starts. After you edit it, press Ctrl+C and start the server again.
 
-To try it: drop one of your syllabi on the upload screen, wait for the summary line, then click "See my dates". Vague dates show under "Needs a date".
+To try it: drop one of your syllabi on the upload screen, wait for "Found N dates", then click "See my dates". Vague dates show in the amber box at the top.
 
 ## Tests
 
@@ -102,7 +106,13 @@ To try it: drop one of your syllabi on the upload screen, wait for the summary l
 py -m pytest
 ```
 
-Runs all 664 regular tests in about 15 seconds. They run offline with a fake Claude, and a guard makes any test that tries to reach the real API fail.
+Runs all 746 regular tests in about 20 seconds. They run offline with a fake Claude, and a guard makes any test that tries to reach the real API fail.
+
+One of them (`tests\test_frontend_js.py`) runs the browser-side unit tests in `tests\js\` with Node's built-in test runner. No packages are installed for it. If Node isn't on the PC, that one test is skipped. To run only those:
+
+```powershell
+node --test (Get-ChildItem tests\js\*.test.mjs | ForEach-Object FullName)
+```
 
 ```powershell
 py -m pytest -m live
@@ -179,10 +189,11 @@ backend/
     connection.py      opens SQLite and applies migrations
     repository.py      every SQL query
     migrations/001_initial.sql
+    migrations/002_item_dates.sql   keeps the syllabus's date next to the student's
   routes/
     deps.py            browser ID check, database connection, extractor
     syllabi.py         POST and GET /api/syllabi, PATCH /api/syllabi/{id}
-    items.py           GET /api/items
+    items.py           GET /api/items, PATCH /api/items/{id}
   services/
     text_extraction.py PDF and Word to text
     extraction.py      the Claude call
@@ -199,14 +210,20 @@ frontend/
     api.js             the only file that talks to the server
     client-id.js       the browser's random ID
     format.js          dates, numbers and labels through Intl
-    class-colors.js    one color per class, by upload order
+    class-colors.js    one color per class, by upload order, and the short name on a chip
+    weeks.js           sorts dates into Monday-to-Sunday weeks
+    highlight.js       finds the date words inside a source sentence
+    toast.js           toasts with Undo
     announce.js        status messages for screen readers
-    icons.js           inline icons and a safe element builder
-    screens/upload.js  the upload screen
-    screens/dates.js   the dates screen
+    icons.js           the three icons (check, warning, arrow) and a safe element builder
+    screens/upload.js       the upload screen: the queue, Rename, the "Found N dates" panel
+    screens/upload-rows.js  what a file row looks like in each state
+    screens/dates.js        the "Got N dates." screen: loading, saving, Undo
+    screens/date-row.js     one date row, one "needs a date" block
 tests/
   fixtures/            sample syllabus (text, PDF, HTML), a fake Claude reply, the expected result
   test_*.py
+  js/*.test.mjs        browser-side unit tests, run by test_frontend_js.py
 data/                  the SQLite database (created on first run, gitignored)
 ```
 

@@ -23,6 +23,7 @@ ERRORS: dict[str, ErrorSpec] = {
     "two_inputs": ErrorSpec(400, "Send me a file or pasted text, not both at once."),
     "bad_request": ErrorSpec(400, "Something in that request didn't look right. Try again."),
     "invalid_class_name": ErrorSpec(400, "Class names need 1 to 120 characters."),
+    "invalid_date": ErrorSpec(400, "That date didn't look right. Pick a day from the calendar."),
     # 404 / 405
     "not_found": ErrorSpec(404, "I couldn't find that."),
     "method_not_allowed": ErrorSpec(405, "That isn't something I can do here."),

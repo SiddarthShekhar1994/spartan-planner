@@ -15,6 +15,13 @@ const dueDateFormat = new Intl.DateTimeFormat(LOCALE, {
   year: 'numeric',
   timeZone: 'UTC',
 });
+const utc = (options) => new Intl.DateTimeFormat(LOCALE, { ...options, timeZone: 'UTC' });
+const weekdayShortFormat = utc({ weekday: 'short' });
+const monthShortFormat = utc({ month: 'short' });
+const dayFormat = utc({ day: 'numeric' });
+const monthDayFormat = utc({ month: 'short', day: 'numeric' });
+const longDateFormat = utc({ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+const DAY_MS = 86400000;
 const percentFormat = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 1 });
 const countFormat = new Intl.NumberFormat(LOCALE);
 const pluralRules = new Intl.PluralRules(LOCALE);
@@ -79,6 +86,28 @@ export function formatDueDateParts(iso) {
     else merged.push({ ...piece });
     return merged;
   }, []);
+}
+
+/** "2026-11-19" -> {weekday: "Thu", day: "19", month: "Nov"}. Null for a missing or malformed date. */
+export function formatDayParts(iso) {
+  const parsed = parseDateOnly(iso);
+  if (!parsed) return null;
+  const time = utcTime(parsed);
+  return { weekday: weekdayShortFormat.format(time), day: dayFormat.format(time), month: monthShortFormat.format(time) };
+}
+
+/** "2026-11-19" -> "Thursday, November 19, 2026". Empty string for a missing or malformed date. */
+export function formatLongDate(iso) {
+  const parsed = parseDateOnly(iso);
+  return parsed ? longDateFormat.format(utcTime(parsed)) : '';
+}
+
+/**
+ * The Monday-to-Sunday week that starts on a day number (days since 1970-01-01, see weeks.js):
+ * "Nov 30 – Dec 6", or "Dec 7 – 13" inside one month.
+ */
+export function formatWeekRange(startDay) {
+  return monthDayFormat.formatRange(startDay * DAY_MS, (startDay + 6) * DAY_MS);
 }
 
 /** 20 -> "20%", 12.5 -> "12.5%". Empty string when there is no weight. */
