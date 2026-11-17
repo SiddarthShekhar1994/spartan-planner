@@ -12,6 +12,7 @@ import { announce } from '../announce.js';
 import { classCode, classColorMap } from '../class-colors.js';
 import { formatCount, formatWeekRange, parseDateOnly, plural } from '../format.js';
 import { el, icon } from '../icons.js';
+import { speaker } from '../speaker.js';
 import { toast } from '../toast.js';
 import { dayNumber, groupByWeek, localToday } from '../weeks.js';
 import { dateRow, needBlock, waitingRow } from './date-row.js';
@@ -36,13 +37,14 @@ export function render(container) {
   let saving = false;
   const state = {
     status: 'loading', error: '', syllabi: [], items: [],
-    open: null, editing: null, pastOpen: false, waitingOpen: false,
+    open: null, opening: null, editing: null, landed: null, arriving: false, pastOpen: false, waitingOpen: false,
     errors: new Map(), drafts: new Map(),
   };
   const heading = el('h1', { tabindex: '-1' }, COPY.loading);
   const lead = el('p', { class: 'lead', hidden: true });
   const body = el('div', { class: 'dates-body' });
-  container.append(el('div', { class: 'screen col' }, heading, lead, body));
+  const talk = speaker(heading, lead);
+  container.append(el('div', { class: 'screen col' }, talk.root, body));
 
   /** Move focus to an element by id. False when it isn't on the page. */
   const focusId = (id) => {
@@ -59,7 +61,7 @@ export function render(container) {
     try {
       const [syllabi, items] = await Promise.all([listSyllabi(), listItems()]);
       if (disposed) return;
-      Object.assign(state, { status: 'ready', syllabi, items });
+      Object.assign(state, { status: 'ready', syllabi, items, arriving: true });
       draw();
       const waiting = items.filter((item) => !hasDate(item) && item.status !== 'skipped').length;
       announce(waiting ? `${heading.textContent} ${needsTitle(waiting)}.` : heading.textContent);
@@ -74,8 +76,8 @@ export function render(container) {
   /* ---------- Drawing ---------- */
 
   function draw() {
-    if (state.status === 'loading') return show(COPY.loading, '', [skeleton()]);
-    if (state.status === 'error') return show(COPY.errorTitle, '', [errorNotice()]);
+    if (state.status === 'loading') return show(COPY.loading, '', [skeleton()], 'reading');
+    if (state.status === 'error') return show(COPY.errorTitle, '', [errorNotice()], 'worried');
     if (state.syllabi.length === 0) return show(COPY.none, COPY.noSyllabi, [action('Upload a syllabus', 'btn-primary')]);
     if (state.items.length === 0) return show(COPY.none, COPY.noItems, [action('Add another syllabus', 'btn-primary')]);
 
@@ -86,6 +88,10 @@ export function render(container) {
     const count = dated.length;
     const title = count ? `Got ${formatCount(count)} ${plural(count, 'date', 'dates')}.` : COPY.none;
 
+    const landed = state.landed;
+    state.landed = null; // the highlight on a row that just changed plays once
+    body.classList.toggle('is-arriving', state.arriving); // the groups rise in once, when the dates load
+    state.arriving = false;
     return show(title, count ? COPY.lead : COPY.noneDated, [
       missing.length ? needsBox(missing) : null,
       weeks.map(weekSection),
@@ -93,14 +99,17 @@ export function render(container) {
       past.length ? closedGroup('past', 'Already passed', past, dateRow, '') : null,
       waiting.length ? closedGroup('waiting', 'Not sure yet', waiting, waitingRow, "These stay out until they have a date.") : null,
       action('Add another syllabus', 'btn-secondary'),
-    ]);
+    ], count ? 'happy' : 'hi', landed);
   }
 
-  function show(title, leadText, nodes) {
+  function show(title, leadText, nodes, mood = 'hi', landed = null) {
+    talk.setMood(mood);
     heading.textContent = title;
     lead.textContent = leadText;
     lead.hidden = !leadText;
     body.replaceChildren(...nodes.flat(Infinity).filter(Boolean));
+    state.opening = null; // a row's sentence rises in only when the row was just opened
+    if (landed !== null) document.getElementById(`row-${landed}`)?.closest('.drow')?.classList.add('is-landed');
   }
 
   function skeleton() {
@@ -165,6 +174,7 @@ export function render(container) {
       code: classCode(className),
       color: classColorMap(state.syllabi).get(item.syllabus_id),
       open: state.open === item.id,
+      opening: state.opening === item.id,
       editing: state.editing === item.id,
       error: state.errors.get(item.id) ?? '',
       draft: state.drafts.get(item.id),
@@ -188,6 +198,7 @@ export function render(container) {
 
   function toggle(item) {
     state.open = state.open === item.id ? null : item.id;
+    state.opening = state.open;
     state.editing = null;
     forget(item);
     draw();
@@ -216,6 +227,7 @@ export function render(container) {
   /** Show a row wherever its date now puts it: open, with its group open if it is in one. */
   function reveal(item) {
     state.open = item.id;
+    state.opening = item.id;
     state.editing = null;
     if (isPast(item)) state.pastOpen = true;
     if (!hasDate(item) && item.status === 'skipped') state.waitingOpen = true;
@@ -273,6 +285,7 @@ export function render(container) {
     const saved = await send(item, { dueDate: value }, button);
     if (!saved) return;
     reveal(saved);
+    state.landed = saved.id;
     draw();
     focusId(`row-${saved.id}`);
     toast(hadDate ? 'Date changed.' : `Added ${saved.title}.`,

@@ -1,5 +1,15 @@
 # Changelog
 
+## Avatar and more motion (2026-11-17)
+
+Sid asked for an avatar that says the app's lines, and for at least 10 animations.
+
+- **Avatar:** a small card-file folder with a face. It says each screen's headline and lead in a speech bubble, on all four screens. Its face changes with what is happening: reading (eyes down) while a file is read or dates load, happy when dates are found, worried when something fails. It is decoration for the eye; screen readers get the heading as before.
+- **Motion,** 17 in all, each played once for one reason: the avatar settles in; its bubble rises in; it blinks once; its face changes softly; its eyes run along a line while it reads; a new file row rises in; the check settles in when a file is read; "Found N dates" rises in; buttons press in under a click; the drop box lifts while a file is held over it; the progress dot stretches into place; the highlighter sweeps across the extended-time choice you pick; "Your number" rises in; an opened row's sentence rises in; a date you just added or changed is marked once and the mark fades; a toast rises in; the dates rise in together when they load. The screen fade, the highlighter pass over a file and the row arrow were already there.
+- All of it is in `frontend/css/motion.css`, uses transform and opacity only, and is off for anyone whose device asks for reduced motion.
+
+**This goes past the brief.** `CLAUDE.md` still says "Motion is rare and calm: one soft fade when the screen changes, and chart bars that grow once." Kept from that rule: nothing bounces, bursts, staggers, counts up or repeats on its own. The motion line in `CLAUDE.md` needs Sid's new wording.
+
 ## Setup questions (2026-11-17)
 
 The two setup questions from the approved demo, one per screen, between upload and the dates.

@@ -6,6 +6,7 @@
  * the server, in any form.
  */
 import { el, icon } from '../icons.js';
+import { speaker } from '../speaker.js';
 import { cleanMultiplier, MAX_MULTIPLIER, MIN_MULTIPLIER, PRESET_MULTIPLIERS, readSettings, saveMultiplier } from '../settings.js';
 
 const CUSTOM = 'custom';
@@ -70,8 +71,8 @@ export function render(container) {
   };
 
   container.append(el('div', { class: 'screen col' },
-    el('h1', { tabindex: '-1' }, 'Real talk: do you get extended time?'),
-    el('p', { class: 'lead' }, "You don't need to tell me why."),
+    speaker(el('h1', { tabindex: '-1' }, 'Real talk: do you get extended time?'),
+      el('p', { class: 'lead' }, "You don't need to tell me why.")).root,
     el('fieldset', { class: 'opts-set' }, el('legend', { class: 'visually-hidden' }, 'Extended time'),
       el('div', { class: 'opts' }, OPTIONS.map(option))),
     customRow, error,

@@ -5,7 +5,7 @@
  * These only build DOM. Loading and saving live in dates.js.
  *
  * ctx for every builder:
- *   {code, className, color, open, editing, error, draft,
+ *   {code, className, color, open, opening, editing, error, draft,
  *    on: {toggle, edit, cancel, save(value, button), skip(button), draft(value)}}
  */
 import { formatDayParts, formatLongDate } from '../format.js';
@@ -78,7 +78,7 @@ export function dateRow(item, ctx) {
       item.status === 'edited' ? el('span', { class: 'flag flag-quiet' }, COPY.youSet) : null)),
   icon('chevron', 'chev'));
 
-  const more = ctx.open ? el('div', { class: 'more', id: `more-${item.id}` },
+  const more = ctx.open ? el('div', { class: ctx.opening ? 'more is-opening' : 'more', id: `more-${item.id}` },
     el('p', { class: 'src-cap' }, item.status === 'edited' ? 'Your syllabus said' : 'From your syllabus'),
     el('p', { class: 'src' }, quoteNodes(item)),
     item.source_verified ? null : el('p', { class: 'warn' }, COPY.unverified),
@@ -111,7 +111,7 @@ export function waitingRow(item, ctx) {
     el('span', { class: 'dwhat-tags' }, chip(ctx), unverifiedFlag(item))),
   icon('chevron', 'chev'));
 
-  const more = ctx.open ? el('div', { class: 'more', id: `more-${item.id}` },
+  const more = ctx.open ? el('div', { class: ctx.opening ? 'more is-opening' : 'more', id: `more-${item.id}` },
     el('p', { class: 'src-cap' }, 'From your syllabus'),
     el('p', { class: 'src' }, quoteNodes(item)),
     item.source_verified ? null : el('p', { class: 'warn' }, COPY.unverified),

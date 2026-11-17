@@ -139,7 +139,6 @@
 /* The picked choice: the highlighter, a heavier border, and the native radio state for screen readers. */
 .opt input:checked + label {
   border: 3px solid var(--ink);
-  background: var(--hl);
   color: var(--hl-ink);
 }
 

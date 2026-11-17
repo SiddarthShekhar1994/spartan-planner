@@ -5,6 +5,7 @@
 import { formatCount } from '../format.js';
 import { el } from '../icons.js';
 import { MAX_HOURS, MIN_HOURS, perDayText, readSettings, saveHours } from '../settings.js';
+import { speaker } from '../speaker.js';
 
 export function render(container) {
   const { hours } = readSettings();
@@ -22,8 +23,8 @@ export function render(container) {
   });
 
   container.append(el('div', { class: 'screen col' },
-    el('h1', { tabindex: '-1' }, 'How many hours a week can you study?'),
-    el('p', { class: 'lead' }, 'A rough guess is fine.'),
+    speaker(el('h1', { tabindex: '-1' }, 'How many hours a week can you study?'),
+      el('p', { class: 'lead' }, 'A rough guess is fine.')).root,
     el('div', { class: 'card setup-card' },
       el('p', {}, number),
       el('p', { class: 'setup-unit' }, 'hours a week'),
