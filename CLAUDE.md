@@ -1,6 +1,6 @@
 # Spartan Planner
 
-A web app that turns course syllabi into a semester plan. A student uploads syllabi, the app finds every deadline and shows the exact sentence it came from, the student confirms each date, and the app builds a backward plan and warns about weeks where work piles up across classes. Built by one SJSU student for other SJSU students, with input from the Accessible Education Center. Testers get a link on Nov 18, 2026.
+A web app that turns course syllabi into a semester plan. A student uploads syllabi and the app finds every deadline and puts it straight into the plan, with the exact sentence it came from one tap away. The student only fills in dates the syllabus doesn't give. The app builds a backward plan and warns about weeks where work piles up across classes. Built by one SJSU student for other SJSU students, with input from the Accessible Education Center. Testers get a link on Nov 18, 2026.
 
 ## Stack
 - Python 3.13, FastAPI, SQLite. One deployable unit.
@@ -28,18 +28,29 @@ A web app that turns course syllabi into a semester plan. A student uploads syll
 ## Flow
 1. Upload syllabi.
 2. One question per screen: free study hours per week, then extended time (1x, 1.5x, 2x, or a custom number). Both answers stay in the browser.
-3. Check each date, one card at a time, next to its source sentence. Confirm, fix, or save for later.
+3. Dates go into the plan automatically. The student never confirms them one by one.
+   - One "Got N dates." screen lists every date, grouped by week.
+   - The app only asks about dates the syllabus doesn't give. The student adds a date or picks "Not sure yet", which keeps that item off the plan until it has one.
+   - Tapping a date shows its source sentence and lets the student change the date.
+   - If the source sentence can't be found in the syllabus, the date still goes in, with a "Worth a look" flag.
 4. Plan screen: countdown to finals, crunch warning, load per week by class, an "Up next" task, calendar export.
 
 ## Look and voice
-- Dark mode is the default. Background #0D0F1C, cards #171A2C, raised #1F2340, borders #2C3155, text #F3F1FF, muted text #A7ACC8, accent lime #C8F560, warning amber #FFB547, cheer purple #9B8CFF.
-- Class colors, always shown with the class name: #7AA2FF, #FF8FB1, #6EE7B7, then cycle.
-- Headings in Bricolage Grotesque 800. Body in Atkinson Hyperlegible. Load both from Google Fonts.
-- The app speaks in the first person, short and friendly. Examples: "Feed me your syllabi." "Real talk: do you get extended time?" "Quick gut check." "I didn't guess. When is it actually due?"
-- Warnings are gentle and specific, never alarming. Pattern: "Hey! Dec 7 to 11 is stacked." Then what lands that week, the hours needed against the hours free, and one action.
+- Light is the default: a warm off-white page. Background #F5F3EE, cards #FFFEFA, raised #F0EDE5, borders #DEDACF, strong borders (inputs, drop box) #8A8578, text #1C1B18, muted text #57534A. The main button is #1C1B18 with #FFFEFA text.
+- A dark theme is available and follows the device setting. Background #0D0F1C, cards #171A2C, raised #1F2340, borders #4A5190, strong borders #737CB3, text #F3F1FF, muted text #A7ACC8. The main button is lime #C8F560 with #0D0F1C text.
+- Lime #C8F560 is the highlighter: it marks the date words inside a source sentence and the picked choice. Amber means "needs your eyes": fill #FFB547, with tint #FFF0D4, border #B8761A and text #7A4300 in light, and tint #332D2F, border #A8793E and text #FFB547 in dark.
+- Class colors, always shown with the class name: #7AA2FF, #FF8FB1, #6EE7B7, then cycle. Each class shows as a colored tab or chip with dark text #16171D, like a tab in a card file.
+- Headings in Lexend 700 and 800. Body in Atkinson Hyperlegible, 17px or larger. Load both from Google Fonts.
+- The app speaks in the first person, short and friendly. Examples: "Feed me your syllabi." "Real talk: do you get extended time?" "Got 9 dates." "I didn't guess. When is it actually due?"
+- Warnings are gentle and specific, never alarming. Pattern: "Hey! Dec 7 to 11 is stacked." Then the hours needed against the hours free, the item that would help most to start early, and one action.
 - One main thing per screen. Large tap targets. A visible progress indicator through setup.
-- Motion: cards slide, checks pop, bars grow. Animate transform and opacity only. Wrap all motion in a prefers-reduced-motion check and turn it off for users who ask for less.
-- Works on a laptop and a phone. Setup and the plan view get a wider layout on a laptop.
+- Motion is rare and calm: one soft fade when the screen changes, and chart bars that grow once. No pops, bounces, bursts, staggered pop-ins, counting numbers or repeating animations. Animate transform and opacity only. Wrap all motion in a prefers-reduced-motion check and turn it off for users who ask for less.
+- Icons only where they carry meaning: a check, a warning triangle, an arrow that expands a row. Buttons and notes are text only.
+- Hover states change to a solid color. They never fade or dim.
+- Spacing comes from one scale: 4, 8, 12, 16, 24, 32, 48.
+- No gradients, glass effects, colored left borders on cards, emojis in headings, or em dashes in copy.
+- Actions that change the plan (Done, Not today, removing a file, changing a date) show a toast with Undo. The browser's Back button steps back through the flow.
+- Works on a laptop and a phone. The plan view gets a wider two-column layout on a laptop.
 
 ## UI quality bar
 - Full keyboard support with visible focus rings. Never remove an outline without a replacement.
@@ -50,11 +61,12 @@ A web app that turns course syllabi into a semester plan. A student uploads syll
 - Design empty, loading and error states for every screen. No dead ends.
 - Dates and numbers go through Intl.DateTimeFormat and Intl.NumberFormat.
 - Long class names and long source sentences must wrap or truncate cleanly.
-- Set color-scheme: dark on the html element.
+- Set color-scheme on the html element to match the active theme (light or dark).
+- Text contrast at least 4.5:1 in both themes. Card and input borders must stay visible in dark mode.
 - Every generated value (date, type, weight, hours) is editable by the student.
 
 ## How we work
 - Before writing code in a session, list the files you will create or change and ask me anything you need answered.
 - Build in stages and stop at the end of each prompt so I can test.
 - Ask before adding any rule or default that changes how the app behaves. Do not add features that are not in the prompt.
-- Out of scope for v1: accounts, Canvas integration, a chat interface, grade tracking, flashcards, timers beyond the sprint button, a mobile app, reminder notifications, support links.
+- Out of scope for v1: accounts, Canvas integration (planned for v2, as a second source of dates), a chat interface, grade tracking, flashcards, timers beyond the sprint button, a mobile app, reminder notifications, support links.
