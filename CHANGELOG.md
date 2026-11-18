@@ -1,5 +1,29 @@
 # Changelog
 
+## Hosting on Railway (2026-11-17)
+
+What the app needs to run at a public link.
+
+- `Dockerfile` and `.dockerignore`: Railway builds the image from these. Python 3.13, only `backend/` and `frontend/` go in, and the start command reads Railway's `PORT`. Railway's own config file is being retired on 2026-12-01, so it isn't used.
+- `GET /health` for Railway's deploy check.
+- The database path defaults to `/data/spartan.db` in the image, which is where the Railway volume gets mounted, so a redeploy doesn't wipe it.
+- Behind Railway's proxy, the upload limit per network now uses the visitor's own address from the `X-Real-IP` header (`TRUST_PROXY=1`, set in the image). Before this, every tester would have shared one limit of 50 uploads a day. The address is still never stored or logged.
+- Browser safety headers on every response: a content policy that allows only the app's own files and Google Fonts, no framing, no type sniffing, and HTTPS-only on the live site.
+- Frontend files are now sent with `Cache-Control: no-cache`, so a browser picks up a new version after a deploy instead of running an old copy.
+- The interactive API pages (`/docs`) are off on the live site (`APP_ENV=production`, set in the image).
+- A plain-words privacy note at `privacy.html`, linked from the footer: what is kept, what isn't, that syllabus text goes to Anthropic, that the app can be wrong, and how to ask for deletion with the browser ID.
+- Tests: 772 offline tests, up from 746.
+
+### Not checked
+
+- The Docker image has not been built on this PC (Docker isn't installed). The first Railway deploy is its first build.
+- Railway's docs do not say whether a visitor can fake the `X-Real-IP` header. The limit it feeds is only a cost guard.
+
+### Not in yet (from the old Build 4 prompt)
+
+- The event log, the data checks and the analysis notebook.
+- A way to delete one browser's data without opening the database by hand.
+
 ## The plan screen (2026-11-17)
 
 The plan itself: what to do today, which week is stacked, and hours per week by class.

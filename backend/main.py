@@ -44,6 +44,29 @@ logger = logging.getLogger("spartan.app")
 # Room for multipart boundaries, part headers and a small text field around a maximum-size file.
 BODY_SLACK_BYTES = 512 * 1024
 
+# What a page from this app may load: its own files, and the two Google Fonts hosts.
+CONTENT_SECURITY_POLICY = "; ".join(
+    [
+        "default-src 'self'",
+        "style-src 'self' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ]
+)
+SECURITY_HEADERS: tuple[tuple[bytes, bytes], ...] = (
+    (b"x-content-type-options", b"nosniff"),
+    (b"x-frame-options", b"DENY"),
+    (b"referrer-policy", b"same-origin"),
+    (b"content-security-policy", CONTENT_SECURITY_POLICY.encode("ascii")),
+)
+HSTS_HEADER = (b"strict-transport-security", b"max-age=31536000")
+# The interactive API pages load their scripts from a CDN, so the policy above would break them.
+DOCS_PATHS = ("/docs", "/redoc", "/openapi.json")
+
 
 # ---------------------------------------------------------------------------
 # Error responses
@@ -185,6 +208,43 @@ def _too_large_response() -> JSONResponse:
     return error_response(error, headers={"Connection": "close"})
 
 
+class SecurityHeadersMiddleware:
+    """Adds the browser safety headers to every response, and HTTPS-only in production."""
+
+    def __init__(self, app: ASGIApp, hsts: bool) -> None:
+        self.app = app
+        self.hsts = hsts
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope["path"].startswith(DOCS_PATHS):
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                present = {name.lower() for name, _ in headers}
+                extra = SECURITY_HEADERS + ((HSTS_HEADER,) if self.hsts else ())
+                headers.extend(header for header in extra if header[0] not in present)
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
+class FreshStaticFiles(StaticFiles):
+    """Frontend files that browsers check for a newer copy on every visit.
+
+    Without this, a browser can keep running last week's JavaScript after a deploy. "no-cache"
+    still lets it reuse its copy when the file hasn't changed (the server answers 304).
+    """
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 class UnhandledErrorMiddleware:
     """Any exception no handler took becomes a 500 ``internal_error`` envelope.
 
@@ -255,7 +315,7 @@ def _mount_frontend(app: FastAPI, directory: Path) -> None:
         # StaticFiles refuses a missing folder. Keep the API up; other paths answer 404 until it exists.
         logger.warning("frontend_missing")
         return
-    app.mount("/", StaticFiles(directory=directory, html=True), name="frontend")
+    app.mount("/", FreshStaticFiles(directory=directory, html=True), name="frontend")
 
 
 def create_app(settings: Settings | None = None, *, extractor: Extractor | None = None) -> FastAPI:
@@ -271,7 +331,12 @@ def create_app(settings: Settings | None = None, *, extractor: Extractor | None 
     app = FastAPI(
         title="Spartan Planner",
         lifespan=lifespan,
+        # No interactive API pages on the live site.
+        docs_url=None if settings.production else "/docs",
+        redoc_url=None if settings.production else "/redoc",
+        openapi_url=None if settings.production else "/openapi.json",
         middleware=[
+            Middleware(SecurityHeadersMiddleware, hsts=settings.production),
             Middleware(UnhandledErrorMiddleware),
             Middleware(BodySizeLimitMiddleware, max_body_bytes=settings.max_upload_bytes + BODY_SLACK_BYTES),
         ],
@@ -288,6 +353,12 @@ def create_app(settings: Settings | None = None, *, extractor: Extractor | None 
 
     app.include_router(syllabi.router)
     app.include_router(items.router)
+
+    @app.get("/health", include_in_schema=False)
+    def health() -> dict[str, str]:
+        """The host calls this after a deploy to see that the app came up. It touches nothing."""
+        return {"status": "ok"}
+
     # Last, because the mount matches every path the routes above don't.
     _mount_frontend(app, Path(settings.frontend_dir))
     return app

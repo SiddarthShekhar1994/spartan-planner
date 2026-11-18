@@ -1,0 +1,16 @@
+# Keep secrets, local data and everything the server doesn't need out of the image.
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+.venv
+.claude
+.pytest_cache
+__pycache__
+*.pyc
+data
+tests
+eval
+analysis
+*.md

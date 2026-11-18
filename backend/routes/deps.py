@@ -57,8 +57,20 @@ def get_ip_limiter(request: Request) -> SlidingWindowLimiter:
     return request.app.state.ip_limiter
 
 
+MAX_IP_HEADER_CHARS = 64  # longer than any IPv4 or IPv6 address
+
+
 def client_ip(request: Request) -> str:
-    """The connecting address. Behind a proxy this is the proxy's address until Build 4 adds proxy trust."""
+    """The visitor's address, used only for the in-memory upload limit. Never stored, never logged.
+
+    Behind the host's proxy (``trust_proxy``), every request arrives from the proxy, so the
+    visitor's own address is read from the ``X-Real-IP`` header the proxy sets. Without that
+    setting the header is ignored, because anyone could send it.
+    """
+    if app_settings(request).trust_proxy:
+        forwarded = (request.headers.get("x-real-ip") or "").strip()
+        if forwarded and len(forwarded) <= MAX_IP_HEADER_CHARS:
+            return forwarded
     client = request.client
     if client is None or not client.host:
         return "unknown"

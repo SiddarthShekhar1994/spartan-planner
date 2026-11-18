@@ -102,6 +102,21 @@ Then open http://127.0.0.1:8000. Stop the server with Ctrl+C.
 
 To try it: drop one of your syllabi on the upload screen, wait for "Found N dates", then click "See my dates". Vague dates show in the amber box at the top.
 
+## Putting it online (Railway)
+
+The repo has a `Dockerfile`, and Railway builds from it on its own. In the Railway dashboard:
+
+1. **New project** from the GitHub repo `spartan-planner`, branch `main`.
+2. **Add a volume** to the service and set its mount path to `/data`. The database lives there (`/data/spartan.db`), so a redeploy doesn't wipe it. Without the volume the app still runs, but every deploy starts with an empty database.
+3. **Variables:** add `ANTHROPIC_API_KEY` (your key) and, if you want something other than the default `claude-haiku-5-5`, `CLAUDE_MODEL`. Nothing else is needed: the port, the database path and the live-site settings are already in the image.
+4. **Health check path:** `/health` in the service's settings.
+5. **Networking:** generate a public domain. Railway serves it over HTTPS.
+6. In the Anthropic console, set a monthly spending limit before you share the link.
+
+After a deploy, open `https://your-domain/health`. It should say `{"status":"ok"}`.
+
+To copy the database off Railway for a look, use the Railway CLI from a terminal: `railway ssh`, then read `/data/spartan.db`. Never commit a copy.
+
 ## Tests
 
 ```powershell
