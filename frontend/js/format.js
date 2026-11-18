@@ -110,6 +110,22 @@ export function formatWeekRange(startDay) {
   return monthDayFormat.formatRange(startDay * DAY_MS, (startDay + 6) * DAY_MS);
 }
 
+/** A day number (days since 1970-01-01) -> "Nov 30". */
+export function formatShortDay(day) {
+  return monthDayFormat.format(day * DAY_MS);
+}
+
+/**
+ * The Monday-to-Sunday week that starts on a day number, in words for a sentence:
+ * "Dec 7 to 13", or "Nov 30 to Dec 6" across two months.
+ */
+export function formatWeekWords(startDay) {
+  const start = startDay * DAY_MS;
+  const end = (startDay + 6) * DAY_MS;
+  const sameMonth = monthShortFormat.format(start) === monthShortFormat.format(end);
+  return `${monthDayFormat.format(start)} to ${sameMonth ? dayFormat.format(end) : monthDayFormat.format(end)}`;
+}
+
 /** 20 -> "20%", 12.5 -> "12.5%". Empty string when there is no weight. */
 export function formatWeight(weight) {
   if (typeof weight !== 'number' || !Number.isFinite(weight)) return '';

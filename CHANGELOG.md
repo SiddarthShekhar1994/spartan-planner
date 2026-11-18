@@ -1,5 +1,35 @@
 # Changelog
 
+## The plan screen (2026-11-17)
+
+The plan itself: what to do today, which week is stacked, and hours per week by class.
+
+- **Countdown** in the avatar's bubble: "4 weeks until finals." It counts to the first exam with "final" in its title, or the first exam when none is called a final.
+- **Up next:** one task for today under its class tab, with the time it should take, Done and Not today (D and N on a keyboard), dots for how much of today is done, and Undo on both.
+- **Crunch warning:** "Hey! Nov 30 to Dec 6 is stacked." with the hours of work against the hours free, the item that would help most to start early, and one action, "Spread it out for me", which starts that item a week sooner. With no stacked week it says so.
+- **Your weeks:** bars of hours per week, stacked by class color, a dashed line at the free hours, and each week in words (Chill, Busy, Over 7). The bars grow once.
+- The dates screen now leads to the plan ("See my plan"), and the header has a link between the two.
+- **Privacy:** all of this math runs in the browser (`frontend/js/plan/build.js`). The plan screen only reads classes and dates from the server. Done, Not today and "start early" are kept in the browser's localStorage as item ids. A test fails if the plan screen gains any way to send data.
+
+### Sid's decisions (2026-11-17)
+
+- Hours per item: exam 8, quiz 2, essay or project 6, homework or reading 1.5.
+- Work starts 10 days before an exam, 7 before an essay or project, 3 before a quiz, 1 before homework or reading.
+- A week is stacked when its planned hours are over the free hours.
+
+### Added during the build, not yet approved by Sid
+
+- "Other" items (a lab report, say) count as 1.5 hours starting 1 day before, like homework.
+- A week counts as over only from half an hour past the free hours, and as "Chill" at half the free hours or less.
+- Weeks run Monday to Sunday, and the chart shows up to five of them.
+
+### Known gaps
+
+- "Not today" only takes the task off today's list. Its hours are not moved onto later days yet.
+- Hours per item can't be edited yet.
+- Essays and projects are not broken into steps ("Outline, 45 min"), and the old "3 graded items in 5 days" crunch rule is not in.
+- No calendar export yet.
+
 ## Avatar and more motion (2026-11-17)
 
 Sid asked for an avatar that says the app's lines, and for at least 10 animations.

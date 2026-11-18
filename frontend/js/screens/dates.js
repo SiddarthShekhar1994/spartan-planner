@@ -19,7 +19,7 @@ import { dateRow, needBlock, waitingRow } from './date-row.js';
 
 const COPY = {
   loading: 'Getting your dates…',
-  lead: 'Tap one to see where I found it.',
+  lead: "They're in your plan already. Tap one to see where I found it.",
   loadFailed: "I couldn't load your dates.",
   errorTitle: 'Your dates.',
   none: 'No dates yet.',
@@ -98,7 +98,9 @@ export function render(container) {
       count && weeks.length === 0 ? el('p', { class: 'note' }, COPY.allPast) : null,
       past.length ? closedGroup('past', 'Already passed', past, dateRow, '') : null,
       waiting.length ? closedGroup('waiting', 'Not sure yet', waiting, waitingRow, "These stay out until they have a date.") : null,
-      action('Add another syllabus', 'btn-secondary'),
+      el('div', { class: 'actions' },
+        count ? el('a', { class: 'btn btn-primary', href: '#/plan' }, 'See my plan') : null,
+        el('a', { class: count ? 'btn btn-link' : 'btn btn-secondary', href: '#/' }, 'Add another syllabus')),
     ], count ? 'happy' : 'hi', landed);
   }
 

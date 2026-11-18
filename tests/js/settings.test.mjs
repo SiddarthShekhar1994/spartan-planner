@@ -91,8 +91,8 @@ test('the module that talks to the server knows nothing about the setup answers'
   }
 });
 
-test('only the setup screens read the setup answers', () => {
-  const allowed = new Set(['hours.js', 'extra.js']);
+test('only the setup screens and the plan read the setup answers', () => {
+  const allowed = new Set(['hours.js', 'extra.js', 'plan.js']);
   const importers = jsFiles(join(ROOT, 'frontend', 'js'))
     .filter((path) => /from\s+['"][^'"]*settings\.js['"]/.test(readFileSync(path, 'utf8')))
     .map((path) => path.split(/[\\/]/).pop());
@@ -103,6 +103,19 @@ test('no screen that reads the setup answers also calls the server', () => {
   for (const name of ['hours.js', 'extra.js']) {
     const source = readFileSync(join(ROOT, 'frontend', 'js', 'screens', name), 'utf8');
     assert.equal(/api\.js|fetch\(|XMLHttpRequest|sendBeacon/.test(source), false, `${name} can reach the server`);
+  }
+});
+
+test('the plan screen only reads from the server: it has no way to send anything', () => {
+  const source = readFileSync(join(ROOT, 'frontend', 'js', 'screens', 'plan.js'), 'utf8');
+  const fromApi = /import\s*\{([^}]*)\}\s*from\s*'\.\.\/api\.js'/.exec(source);
+  assert.ok(fromApi, 'plan.js imports from api.js');
+  const names = fromApi[1].split(',').map((name) => name.trim()).filter(Boolean).sort();
+  assert.deepEqual(names, ['listItems', 'listSyllabi', 'messageFor']);
+  assert.equal(/fetch\(|XMLHttpRequest|sendBeacon|request\(/.test(source), false);
+  for (const name of ['build.js', 'day-state.js']) {
+    const helper = readFileSync(join(ROOT, 'frontend', 'js', 'plan', name), 'utf8');
+    assert.equal(/api\.js|fetch\(|XMLHttpRequest|sendBeacon/.test(helper), false, `${name} can reach the server`);
   }
 });
 
