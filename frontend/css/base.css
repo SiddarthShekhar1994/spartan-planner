@@ -433,8 +433,10 @@ textarea {
 
 .toast {
   position: fixed;
-  left: 50%;
+  right: 0;
+  left: 0;
   bottom: calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+  margin-inline: auto;
   z-index: 30;
   display: flex;
   align-items: center;
@@ -447,7 +449,6 @@ textarea {
   color: var(--toast-ink);
   font-weight: 700;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
-  transform: translateX(-50%);
 }
 
 .toast:empty {

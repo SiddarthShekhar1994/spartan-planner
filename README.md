@@ -14,7 +14,9 @@ Turns course syllabi into a semester plan. So far: upload a syllabus and get eve
 - **Light and dark.** Light is the default. Dark follows the device setting.
 - **No accounts.** The browser makes a random ID on the first visit and sends it with every request. Each browser sees only its own classes.
 
-Not built yet: the study-hours and extended-time questions, the plan, and the calendar export.
+- **Two setup questions.** After upload: free study hours a week (a slider), then extended time (No, 1.5x, 2x, or your own number, with no reason asked). Both answers stay in the browser's localStorage and are never sent to the server. Nothing uses them yet: the plan comes next.
+
+Not built yet: the plan and the calendar export.
 
 The API, if you want to poke at it at http://127.0.0.1:8000/docs (every request needs an `X-Client-Id` header holding a UUID):
 
@@ -214,6 +216,9 @@ frontend/
     weeks.js           sorts dates into Monday-to-Sunday weeks
     highlight.js       finds the date words inside a source sentence
     toast.js           toasts with Undo
+    settings.js        study hours and the extended-time number, kept in this browser only
+    screens/hours.js        setup question 1: study hours
+    screens/extra.js        setup question 2: extended time
     announce.js        status messages for screen readers
     icons.js           the three icons (check, warning, arrow) and a safe element builder
     screens/upload.js       the upload screen: the queue, Rename, the "Found N dates" panel

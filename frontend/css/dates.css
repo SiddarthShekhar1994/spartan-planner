@@ -307,7 +307,4 @@ mark.hl-amb {
     transition: transform 0.2s ease-out;
   }
 
-  .more {
-    animation: fade-in 0.2s ease-out both;
-  }
 }

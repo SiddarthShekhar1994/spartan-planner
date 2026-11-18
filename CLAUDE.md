@@ -44,7 +44,8 @@ A web app that turns course syllabi into a semester plan. A student uploads syll
 - The app speaks in the first person, short and friendly. Examples: "Feed me your syllabi." "Real talk: do you get extended time?" "Got 9 dates." "I didn't guess. When is it actually due?"
 - Warnings are gentle and specific, never alarming. Pattern: "Hey! Dec 7 to 11 is stacked." Then the hours needed against the hours free, the item that would help most to start early, and one action.
 - One main thing per screen. Large tap targets. A visible progress indicator through setup.
-- Motion is rare and calm: one soft fade when the screen changes, and chart bars that grow once. No pops, bounces, bursts, staggered pop-ins, counting numbers or repeating animations. Animate transform and opacity only. Wrap all motion in a prefers-reduced-motion check and turn it off for users who ask for less.
+- An avatar, a small card-file folder with a face, says each screen's headline and lead in a speech bubble. Its face shows what is happening: reading, happy, worried. It is decoration: the words in the bubble stay real headings.
+- Motion is plentiful but calm. Things move when something happens: a screen opens, a file is read, a choice is picked, a date is saved, chart bars grow. Each animation plays once and is short and soft. No bounces, bursts, items popping in one after another, counting numbers or animations that repeat on their own. Animate transform and opacity only. Wrap all motion in a prefers-reduced-motion check and turn it off for users who ask for less.
 - Icons only where they carry meaning: a check, a warning triangle, an arrow that expands a row. Buttons and notes are text only.
 - Hover states change to a solid color. They never fade or dim.
 - Spacing comes from one scale: 4, 8, 12, 16, 24, 32, 48.

@@ -9,6 +9,7 @@ import { announce } from '../announce.js';
 import { classColorMap } from '../class-colors.js';
 import { formatCount, formatRetryAfter, plural } from '../format.js';
 import { el, icon } from '../icons.js';
+import { speaker } from '../speaker.js';
 import { toast } from '../toast.js';
 import { foundText, ROW_COPY, rowChildren, rowName } from './upload-rows.js';
 
@@ -92,8 +93,9 @@ function buildView() {
   v.note = el('div', { class: 'classes-note' });
   v.list = el('ul', { class: 'files', 'aria-label': 'Your classes' });
   v.ready = el('div', { class: 'ready', hidden: true });
+  v.speaker = speaker(v.heading, el('p', { class: 'lead' }, COPY.lead));
   v.root = el('div', { class: 'screen col' },
-    v.heading, el('p', { class: 'lead' }, COPY.lead),
+    v.speaker.root,
     el('section', { class: 'add', 'aria-label': 'Add a syllabus' },
       el('div', { class: 'tab tab-new' }, 'New class'), v.zone,
       el('p', { class: 'note' }, COPY.deleteNote),
@@ -223,6 +225,8 @@ function finishReading(row, status) {
   window.clearTimeout(row.slowTimer);
   Object.assign(row, { slow: false, slowTimer: 0 });
   setStatus(row, status);
+  // Only a row that was just read plays the check's little arrival. A redraw (Rename) doesn't.
+  if (status === 'done') view?.items.get(row.key)?.classList.add('is-fresh');
 }
 
 function setStatus(row, status) {
@@ -433,10 +437,11 @@ function syncChrome() {
   const busy = rows.some((row) => row.status === 'queued' || row.status === 'reading');
   // Wait for the whole queue, so the dates screen never shows half of what's coming.
   const ready = done.length > 0 && !busy;
-  // One main action at a time: Choose files until every class is read, then See my dates.
+  // One main action at a time: Choose files until every class is read, then Next.
   view.chooseButton.classList.toggle('btn-primary', !ready);
   view.chooseButton.classList.toggle('btn-secondary', ready);
   view.list.hidden = !hasRows;
+  view.speaker.setMood(busy ? 'reading' : ready ? 'happy' : 'hi');
   syncReady(ready, done);
 
   const noteKey = `${classList.status}|${classList.error}`;
@@ -471,7 +476,7 @@ function syncReady(ready, done) {
   view.ready.replaceChildren(
     el('p', { class: 'big-count' }, `Found ${dates} in ${classes}.`),
     el('p', { class: 'muted' }, detail),
-    el('div', { class: 'actions' }, el('a', { class: 'btn btn-primary', href: '#/dates' }, 'See my dates')));
+    el('div', { class: 'actions' }, el('a', { class: 'btn btn-primary', href: '#/hours' }, 'Next')));
 }
 
 function noteContent() {

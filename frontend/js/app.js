@@ -7,16 +7,23 @@
 import { getClientId } from './client-id.js';
 import { el } from './icons.js';
 import * as datesScreen from './screens/dates.js';
+import * as extraScreen from './screens/extra.js';
+import * as hoursScreen from './screens/hours.js';
 import * as uploadScreen from './screens/upload.js';
 import { clearToast } from './toast.js';
 
 const HOME = '#/';
+const SETUP_STEPS = 3;
+// `step` is the screen's place in setup (upload, hours, extended time). The header shows it as dots.
 const ROUTES = new Map([
-  [HOME, { screen: uploadScreen, title: 'Upload syllabi · Spartan Planner' }],
+  [HOME, { screen: uploadScreen, title: 'Upload syllabi · Spartan Planner', step: 1 }],
+  ['#/hours', { screen: hoursScreen, title: 'Study hours · Spartan Planner', step: 2 }],
+  ['#/extra', { screen: extraScreen, title: 'Extended time · Spartan Planner', step: 3 }],
   ['#/dates', { screen: datesScreen, title: 'Your dates · Spartan Planner' }],
 ]);
 
 const main = document.getElementById('main');
+const headerSlot = document.getElementById('header-slot');
 let currentRoute = null;
 let cleanup = null;
 
@@ -34,6 +41,7 @@ function show() {
   main.replaceChildren();
   currentRoute = routeKey;
   document.title = route.title;
+  headerSlot?.replaceChildren(...(route.step ? [progressDots(route.step)] : []));
   try {
     const result = route.screen.render(main);
     cleanup = typeof result === 'function' ? result : null;
@@ -46,6 +54,15 @@ function show() {
     window.scrollTo(0, 0);
     main.querySelector('h1')?.focus();
   }
+}
+
+/** "Step 2 of 3" for screen readers, three dots for the eye: done, now (the wide one), still to come. */
+function progressDots(step) {
+  const dots = Array.from({ length: SETUP_STEPS }, (_, index) => {
+    const place = index + 1;
+    return el('span', { class: place < step ? 'is-done' : place === step ? 'is-now' : '' });
+  });
+  return el('div', { class: 'dots', role: 'img', 'aria-label': `Step ${step} of ${SETUP_STEPS}` }, dots);
 }
 
 function runCleanup() {

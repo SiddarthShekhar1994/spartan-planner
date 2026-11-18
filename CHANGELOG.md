@@ -1,5 +1,28 @@
 # Changelog
 
+## Avatar and more motion (2026-11-17)
+
+Sid asked for an avatar that says the app's lines, and for at least 10 animations.
+
+- **Avatar:** a small card-file folder with a face. It says each screen's headline and lead in a speech bubble, on all four screens. Its face changes with what is happening: reading (eyes down) while a file is read or dates load, happy when dates are found, worried when something fails. It is decoration for the eye; screen readers get the heading as before.
+- **Motion,** 17 in all, each played once for one reason: the avatar settles in; its bubble rises in; it blinks once; its face changes softly; its eyes run along a line while it reads; a new file row rises in; the check settles in when a file is read; "Found N dates" rises in; buttons press in under a click; the drop box lifts while a file is held over it; the progress dot stretches into place; the highlighter sweeps across the extended-time choice you pick; "Your number" rises in; an opened row's sentence rises in; a date you just added or changed is marked once and the mark fades; a toast rises in; the dates rise in together when they load. The screen fade, the highlighter pass over a file and the row arrow were already there.
+- All of it is in `frontend/css/motion.css`, uses transform and opacity only, and is off for anyone whose device asks for reduced motion.
+
+**The brief changed with it.** `CLAUDE.md` used to say "Motion is rare and calm: one soft fade when the screen changes, and chart bars that grow once." Sid approved new wording on 2026-11-17: motion is plentiful but calm, each animation plays once for a reason, and the avatar is part of the look. Kept from the old rule: nothing bounces, bursts, staggers, counts up or repeats on its own.
+
+## Setup questions (2026-11-17)
+
+The two setup questions from the approved demo, one per screen, between upload and the dates.
+
+- "How many hours a week can you study?": one big number and a slider from 1 to 40, with "About 1 hr 45 min a day." under it. Starts at 12.
+- "Real talk: do you get extended time?": four big choices (No, 1.5x, 2x, Other). Other takes a number from 1 to 4. It says "You don't need to tell me why." and asks for nothing else.
+- Progress dots in the header through setup: upload, hours, extended time.
+- The upload panel's button is now "Next" and leads to the hours question. "See my dates" is on the extended-time screen.
+- Both answers are saved in the browser's localStorage only (`frontend/js/settings.js`). Nothing reads them yet: the plan screen that uses them is the next stage.
+- Tests: `tests/js/settings.test.mjs` checks the values, and checks that the module that talks to the server never touches these answers and that the server code has no word for them.
+
+Different from the old Build 2 prompt, following the demo: a slider instead of a number box with quick picks, no live example under the choices, and no Skip (regular time is already picked).
+
 ## Card-file look and automatic dates, stage one (2026-11-17)
 
 The upload screen and the dates screen now look and work like the demo Sid approved. Dates go in on their own. Nothing is confirmed one by one.
