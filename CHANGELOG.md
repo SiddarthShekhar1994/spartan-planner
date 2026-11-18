@@ -1,5 +1,59 @@
 # Changelog
 
+## Hosting on Railway (2026-11-17)
+
+What the app needs to run at a public link.
+
+- `Dockerfile` and `.dockerignore`: Railway builds the image from these. Python 3.13, only `backend/` and `frontend/` go in, and the start command reads Railway's `PORT`. Railway's own config file is being retired on 2026-12-01, so it isn't used.
+- `GET /health` for Railway's deploy check.
+- The database path defaults to `/data/spartan.db` in the image, which is where the Railway volume gets mounted, so a redeploy doesn't wipe it.
+- Behind Railway's proxy, the upload limit per network now uses the visitor's own address from the `X-Real-IP` header (`TRUST_PROXY=1`, set in the image). Before this, every tester would have shared one limit of 50 uploads a day. The address is still never stored or logged.
+- Browser safety headers on every response: a content policy that allows only the app's own files and Google Fonts, no framing, no type sniffing, and HTTPS-only on the live site.
+- Frontend files are now sent with `Cache-Control: no-cache`, so a browser picks up a new version after a deploy instead of running an old copy.
+- The interactive API pages (`/docs`) are off on the live site (`APP_ENV=production`, set in the image).
+- A plain-words privacy note at `privacy.html`, linked from the footer: what is kept, what isn't, that syllabus text goes to Anthropic, that the app can be wrong, and how to ask for deletion with the browser ID.
+- Tests: 772 offline tests, up from 746.
+
+### Not checked
+
+- The Docker image has not been built on this PC (Docker isn't installed). The first Railway deploy is its first build.
+- Railway's docs do not say whether a visitor can fake the `X-Real-IP` header. The limit it feeds is only a cost guard.
+
+### Not in yet (from the old Build 4 prompt)
+
+- The event log, the data checks and the analysis notebook.
+- A way to delete one browser's data without opening the database by hand.
+
+## The plan screen (2026-11-17)
+
+The plan itself: what to do today, which week is stacked, and hours per week by class.
+
+- **Countdown** in the avatar's bubble: "4 weeks until finals." It counts to the first exam with "final" in its title, or the first exam when none is called a final.
+- **Up next:** one task for today under its class tab, with the time it should take, Done and Not today (D and N on a keyboard), dots for how much of today is done, and Undo on both.
+- **Crunch warning:** "Hey! Nov 30 to Dec 6 is stacked." with the hours of work against the hours free, the item that would help most to start early, and one action, "Spread it out for me", which starts that item a week sooner. With no stacked week it says so.
+- **Your weeks:** bars of hours per week, stacked by class color, a dashed line at the free hours, and each week in words (Chill, Busy, Over 7). The bars grow once.
+- The dates screen now leads to the plan ("See my plan"), and the header has a link between the two.
+- **Privacy:** all of this math runs in the browser (`frontend/js/plan/build.js`). The plan screen only reads classes and dates from the server. Done, Not today and "start early" are kept in the browser's localStorage as item ids. A test fails if the plan screen gains any way to send data.
+
+### Sid's decisions (2026-11-17)
+
+- Hours per item: exam 8, quiz 2, essay or project 6, homework or reading 1.5.
+- Work starts 10 days before an exam, 7 before an essay or project, 3 before a quiz, 1 before homework or reading.
+- A week is stacked when its planned hours are over the free hours.
+
+### Added during the build, not yet approved by Sid
+
+- "Other" items (a lab report, say) count as 1.5 hours starting 1 day before, like homework.
+- A week counts as over only from half an hour past the free hours, and as "Chill" at half the free hours or less.
+- Weeks run Monday to Sunday, and the chart shows up to five of them.
+
+### Known gaps
+
+- "Not today" only takes the task off today's list. Its hours are not moved onto later days yet.
+- Hours per item can't be edited yet.
+- Essays and projects are not broken into steps ("Outline, 45 min"), and the old "3 graded items in 5 days" crunch rule is not in.
+- No calendar export yet.
+
 ## Avatar and more motion (2026-11-17)
 
 Sid asked for an avatar that says the app's lines, and for at least 10 animations.

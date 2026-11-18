@@ -39,6 +39,9 @@ class Settings:
     rate_window_seconds: int = 24 * 60 * 60
     # Class names
     max_class_name_chars: int = 120
+    # Hosting
+    production: bool = False  # APP_ENV=production: no API docs pages, and browsers are told to use HTTPS only
+    trust_proxy: bool = False  # TRUST_PROXY=1: read the visitor's address from the host's X-Real-IP header
 
 
 def resolve_path(path_value: str) -> Path:
@@ -57,6 +60,8 @@ def load_settings() -> Settings:
         anthropic_api_key=api_key,
         claude_model=model,
         database_path=resolve_path(database_path),
+        production=(os.environ.get("APP_ENV") or "").strip().lower() == "production",
+        trust_proxy=(os.environ.get("TRUST_PROXY") or "").strip().lower() in {"1", "true", "yes"},
     )
 
 

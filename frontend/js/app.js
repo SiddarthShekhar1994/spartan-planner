@@ -9,17 +9,20 @@ import { el } from './icons.js';
 import * as datesScreen from './screens/dates.js';
 import * as extraScreen from './screens/extra.js';
 import * as hoursScreen from './screens/hours.js';
+import * as planScreen from './screens/plan.js';
 import * as uploadScreen from './screens/upload.js';
 import { clearToast } from './toast.js';
 
 const HOME = '#/';
 const SETUP_STEPS = 3;
 // `step` is the screen's place in setup (upload, hours, extended time). The header shows it as dots.
+// `link` is a text link in the header, to hop between the dates and the plan.
 const ROUTES = new Map([
   [HOME, { screen: uploadScreen, title: 'Upload syllabi · Spartan Planner', step: 1 }],
   ['#/hours', { screen: hoursScreen, title: 'Study hours · Spartan Planner', step: 2 }],
   ['#/extra', { screen: extraScreen, title: 'Extended time · Spartan Planner', step: 3 }],
-  ['#/dates', { screen: datesScreen, title: 'Your dates · Spartan Planner' }],
+  ['#/dates', { screen: datesScreen, title: 'Your dates · Spartan Planner', link: { href: '#/plan', label: 'My plan' } }],
+  ['#/plan', { screen: planScreen, title: 'Your plan · Spartan Planner', link: { href: '#/dates', label: 'My dates' } }],
 ]);
 
 const main = document.getElementById('main');
@@ -41,7 +44,10 @@ function show() {
   main.replaceChildren();
   currentRoute = routeKey;
   document.title = route.title;
-  headerSlot?.replaceChildren(...(route.step ? [progressDots(route.step)] : []));
+  headerSlot?.replaceChildren(...[
+    route.step ? progressDots(route.step) : null,
+    route.link ? el('a', { class: 'navlink', href: route.link.href }, route.link.label) : null,
+  ].filter(Boolean));
   try {
     const result = route.screen.render(main);
     cleanup = typeof result === 'function' ? result : null;
